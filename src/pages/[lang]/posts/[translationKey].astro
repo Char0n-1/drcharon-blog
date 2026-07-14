@@ -6,7 +6,8 @@ import I18nKey from "@i18n/i18nKey";
 import { i18nFor } from "@i18n/translation";
 import MainGridLayout from "@layouts/MainGridLayout.astro";
 import { getSortedPosts } from "@utils/content-utils";
-import { getDir, getPostUrlBySlug } from "@utils/url-utils";
+import { getDir } from "@utils/url-utils";
+import { getLocalizedPath } from "@utils/navigation-utils";
 import { Icon } from "astro-icon/components";
 import { licenseConfig } from "src/config";
 import ImageWrapper from "../../../components/misc/ImageWrapper.astro";
@@ -59,6 +60,44 @@ export async function getStaticPaths() {
 const { entry, translationKey } = Astro.props;
 
 const currentLang = normalizeSiteLang(Astro.params.lang);
+function getTranslationKeyFromSlug(
+	slug: string,
+): string | null {
+	const normalizedSlug = slug.replaceAll("\\", "/");
+	const parts = normalizedSlug
+		.split("/")
+		.filter(Boolean);
+
+	/*
+	 * Content collection slug:
+	 *
+	 * bilingual-post-test/en
+	 * bilingual-post-test/zh
+	 *
+	 * Remove the final language segment.
+	 */
+	if (parts.length < 2) {
+		return null;
+	}
+
+	return parts.slice(0, -1).join("/");
+}
+
+function getLocalizedAdjacentPostUrl(
+	slug: string,
+): string {
+	const adjacentTranslationKey =
+		getTranslationKeyFromSlug(slug);
+
+	if (!adjacentTranslationKey) {
+		return "#";
+	}
+
+	return getLocalizedPath(
+		currentLang,
+		`/posts/${adjacentTranslationKey}/`,
+	);
+}
 
 const { Content, headings } = await entry.render();
 const { remarkPluginFrontmatter } = await entry.render();
@@ -213,7 +252,7 @@ const jsonLd = {
 	>
 		<a
 			href={entry.data.nextSlug
-				? getPostUrlBySlug(entry.data.nextSlug)
+				? getLocalizedAdjacentPostUrl(entry.data.nextSlug)
 				: "#"}
 			class:list={[
 				"w-full font-bold overflow-hidden active:scale-95",
@@ -240,7 +279,7 @@ const jsonLd = {
 
 		<a
 			href={entry.data.prevSlug
-				? getPostUrlBySlug(entry.data.prevSlug)
+				? getLocalizedAdjacentPostUrl(entry.data.prevSlug)
 				: "#"}
 			class:list={[
 				"w-full font-bold overflow-hidden active:scale-95",

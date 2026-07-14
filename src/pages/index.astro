@@ -1,0 +1,81 @@
+---
+const baseUrl = import.meta.env.BASE_URL;
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta
+			name="viewport"
+			content="width=device-width"
+		/>
+		<meta name="robots" content="noindex" />
+		<title>Redirecting…</title>
+
+		<noscript>
+			<meta
+				http-equiv="refresh"
+				content={`0;url=${baseUrl}en/`}
+			/>
+		</noscript>
+	</head>
+
+	<body>
+		<noscript>
+			<p>
+				<a href={`${baseUrl}en/`}>English</a>
+				|
+				<a href={`${baseUrl}zh/`}>中文</a>
+			</p>
+		</noscript>
+
+		<script is:inline define:vars={{ baseUrl }}>
+			(() => {
+				const storageKey = "preferred-language";
+
+				const storedLanguage =
+					localStorage.getItem(storageKey);
+
+				let targetLanguage;
+
+				if (
+					storedLanguage === "en" ||
+					storedLanguage === "zh"
+				) {
+					targetLanguage = storedLanguage;
+				} else {
+					const browserLanguages =
+						navigator.languages?.length
+							? navigator.languages
+							: [navigator.language];
+
+					const prefersChinese =
+						browserLanguages.some((language) =>
+							language
+								.toLowerCase()
+								.startsWith("zh"),
+						);
+
+					targetLanguage = prefersChinese
+						? "zh"
+						: "en";
+
+					localStorage.setItem(
+						storageKey,
+						targetLanguage,
+					);
+				}
+
+				const normalizedBaseUrl =
+					baseUrl.endsWith("/")
+						? baseUrl
+						: `${baseUrl}/`;
+
+				window.location.replace(
+					`${normalizedBaseUrl}${targetLanguage}/`,
+				);
+			})();
+		</script>
+	</body>
+</html>

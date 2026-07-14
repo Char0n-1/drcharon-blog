@@ -24,13 +24,52 @@ async function getRawSortedPosts() {
 export async function getSortedPosts() {
 	const sorted = await getRawSortedPosts();
 
-	for (let i = 1; i < sorted.length; i++) {
-		sorted[i].data.nextSlug = sorted[i - 1].slug;
-		sorted[i].data.nextTitle = sorted[i - 1].data.title;
+	/*
+	 * Clear any previously generated navigation values before
+	 * rebuilding them.
+	 */
+	for (const post of sorted) {
+		post.data.nextSlug = "";
+		post.data.nextTitle = "";
+		post.data.prevSlug = "";
+		post.data.prevTitle = "";
 	}
-	for (let i = 0; i < sorted.length - 1; i++) {
-		sorted[i].data.prevSlug = sorted[i + 1].slug;
-		sorted[i].data.prevTitle = sorted[i + 1].data.title;
+
+	/*
+	 * Generate previous and next navigation independently
+	 * for each site language.
+	 */
+	const postsByLanguage = new Map<
+		string,
+		typeof sorted
+	>();
+
+	for (const post of sorted) {
+		const language = post.data.lang;
+
+		if (!postsByLanguage.has(language)) {
+			postsByLanguage.set(language, []);
+		}
+
+		postsByLanguage.get(language)?.push(post);
+	}
+
+	for (const localizedPosts of postsByLanguage.values()) {
+		for (let i = 1; i < localizedPosts.length; i++) {
+			localizedPosts[i].data.nextSlug =
+				localizedPosts[i - 1].slug;
+
+			localizedPosts[i].data.nextTitle =
+				localizedPosts[i - 1].data.title;
+		}
+
+		for (let i = 0; i < localizedPosts.length - 1; i++) {
+			localizedPosts[i].data.prevSlug =
+				localizedPosts[i + 1].slug;
+
+			localizedPosts[i].data.prevTitle =
+				localizedPosts[i + 1].data.title;
+		}
 	}
 
 	return sorted;
