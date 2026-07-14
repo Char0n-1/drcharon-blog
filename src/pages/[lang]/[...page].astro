@@ -1,0 +1,44 @@
+---
+import type { GetStaticPaths } from "astro";
+import Pagination from "../../components/control/Pagination.astro";
+import PostPage from "../../components/PostPage.astro";
+import { PAGE_SIZE } from "../../constants/constants";
+import MainGridLayout from "../../layouts/MainGridLayout.astro";
+import { getSortedPosts } from "../../utils/content-utils";
+import {
+	normalizeSiteLang,
+	SITE_LANGUAGES,
+} from "../../utils/locale-utils";
+
+export const getStaticPaths = (async ({ paginate }) => {
+const allBlogPosts = await getSortedPosts();
+
+return SITE_LANGUAGES.flatMap((lang) => {
+	const localizedPosts = allBlogPosts.filter(
+		(entry) => entry.data.lang === lang,
+	);
+
+	return paginate(localizedPosts, {
+		pageSize: PAGE_SIZE,
+		params: {
+			lang,
+		},
+	});
+});
+}) satisfies GetStaticPaths;
+
+const { page } = Astro.props;
+const lang = normalizeSiteLang(Astro.params.lang);
+
+const len = page.data.length;
+---
+
+<MainGridLayout siteLang={lang}>
+	<PostPage page={page} siteLang={lang} />
+
+	<Pagination
+		class="mx-auto onload-animation"
+		page={page}
+		style={`animation-delay: calc(var(--content-delay) + ${len * 50}ms)`}
+	/>
+</MainGridLayout>

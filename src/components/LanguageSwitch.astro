@@ -1,0 +1,175 @@
+---
+import { siteConfig } from "../config";
+import {
+	isSiteLang,
+	type SiteLang,
+} from "../utils/locale-utils";
+import { stripLocaleFromPath } from "../utils/navigation-utils";
+import { url } from "../utils/url-utils";
+
+interface Props {
+	variant?: "desktop" | "mobile";
+}
+
+const { variant = "desktop" } = Astro.props;
+
+const pathname = Astro.url.pathname;
+const firstSegment = pathname.split("/").filter(Boolean)[0];
+
+const configLanguage: SiteLang = siteConfig.lang
+	.toLowerCase()
+	.startsWith("zh")
+	? "zh"
+	: "en";
+
+const currentLang: SiteLang = isSiteLang(firstSegment)
+	? firstSegment
+	: configLanguage;
+
+function getLocalizedUrl(targetLang: SiteLang): string {
+	const pathWithoutLocale = stripLocaleFromPath(pathname);
+
+	return url(
+		`/${targetLang}${pathWithoutLocale}${Astro.url.search}`,
+	);
+}
+
+const englishUrl = getLocalizedUrl("en");
+const chineseUrl = getLocalizedUrl("zh");
+---
+
+{
+	variant === "desktop" ? (
+		<div
+			class="hidden md:flex items-center mx-1"
+			data-language-switch
+		>
+			<a
+				href={englishUrl}
+				data-lang="en"
+				aria-label="Switch to English"
+				aria-current={currentLang === "en" ? "page" : undefined}
+				class:list={[
+					"btn-plain scale-animation rounded-lg h-11 px-3 flex items-center font-bold text-sm active:scale-95",
+					currentLang === "en"
+						? "text-[var(--primary)]"
+						: "text-black/60 dark:text-white/60",
+				]}
+			>
+				English
+			</a>
+
+			<span class="text-black/20 dark:text-white/20">
+				|
+			</span>
+
+			<a
+				href={chineseUrl}
+				data-lang="zh"
+				aria-label="切换到中文"
+				aria-current={currentLang === "zh" ? "page" : undefined}
+				class:list={[
+					"btn-plain scale-animation rounded-lg h-11 px-3 flex items-center font-bold text-sm active:scale-95",
+					currentLang === "zh"
+						? "text-[var(--primary)]"
+						: "text-black/60 dark:text-white/60",
+				]}
+			>
+				中文
+			</a>
+		</div>
+	) : (
+		<div
+			class="flex flex-col border-t border-black/10 dark:border-white/10 mt-2 pt-2"
+			data-language-switch
+		>
+			<a
+				href={englishUrl}
+				data-lang="en"
+				aria-current={currentLang === "en" ? "page" : undefined}
+				class:list={[
+					"group flex items-center justify-between py-2 px-3 rounded-lg font-bold transition",
+					"hover:bg-[var(--btn-plain-bg-hover)] active:bg-[var(--btn-plain-bg-active)]",
+					currentLang === "en"
+						? "text-[var(--primary)]"
+						: "text-black/75 dark:text-white/75",
+				]}
+			>
+				<span>English</span>
+				{currentLang === "en" && (
+					<span class="text-sm">✓</span>
+				)}
+			</a>
+
+			<a
+				href={chineseUrl}
+				data-lang="zh"
+				aria-current={currentLang === "zh" ? "page" : undefined}
+				class:list={[
+					"group flex items-center justify-between py-2 px-3 rounded-lg font-bold transition",
+					"hover:bg-[var(--btn-plain-bg-hover)] active:bg-[var(--btn-plain-bg-active)]",
+					currentLang === "zh"
+						? "text-[var(--primary)]"
+						: "text-black/75 dark:text-white/75",
+				]}
+			>
+				<span>中文</span>
+				{currentLang === "zh" && (
+					<span class="text-sm">✓</span>
+				)}
+			</a>
+		</div>
+	)
+}
+
+<script>
+	function stripLocaleFromCurrentPath(pathname: string): string {
+		const stripped = pathname.replace(
+			/^\/(?:en|zh)(?=\/|$)/,
+			"",
+		);
+
+		return stripped === "" ? "/" : stripped;
+	}
+
+	function setupLanguageSwitch() {
+		document
+			.querySelectorAll<HTMLAnchorElement>(
+				"[data-language-switch] a[data-lang]",
+			)
+			.forEach((link) => {
+				link.onclick = (event) => {
+					event.preventDefault();
+					event.stopImmediatePropagation();
+
+					const targetLang = link.dataset.lang;
+
+					if (
+						targetLang !== "en" &&
+						targetLang !== "zh"
+					) {
+						return;
+					}
+
+					localStorage.setItem(
+						"preferred-language",
+						targetLang,
+					);
+
+					const currentPath =
+						stripLocaleFromCurrentPath(
+							window.location.pathname,
+						);
+
+					const targetUrl =
+						`/${targetLang}${currentPath}` +
+						window.location.search +
+						window.location.hash;
+
+					window.location.assign(targetUrl);
+				};
+			});
+	}
+
+	setupLanguageSwitch();
+</script>

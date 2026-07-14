@@ -2,140 +2,296 @@
 import { Icon } from "astro-icon/components";
 import { navBarConfig, siteConfig } from "../config";
 import { LinkPresets } from "../constants/link-presets";
+import I18nKey from "../i18n/i18nKey";
+import { i18nFor } from "../i18n/translation";
 import { LinkPreset, type NavBarLink } from "../types/config";
+import { normalizeSiteLang } from "../utils/locale-utils";
 import { url } from "../utils/url-utils";
+import LanguageSwitch from "./LanguageSwitch.astro";
 import LightDarkSwitch from "./LightDarkSwitch.svelte";
 import Search from "./Search.svelte";
 import DisplaySettings from "./widget/DisplaySettings.svelte";
 import NavMenuPanel from "./widget/NavMenuPanel.astro";
+import type { SiteLang } from "../utils/locale-utils";
 
-const className = Astro.props.class;
+interface Props {
+	class?: string;
+	siteLang?: SiteLang;
+}
 
-let links: NavBarLink[] = navBarConfig.links.map(
+const {
+	class: className,
+	siteLang,
+} = Astro.props;
+
+const currentLang = normalizeSiteLang(siteLang);
+
+function getPresetName(preset: LinkPreset): string {
+	switch (preset) {
+		case LinkPreset.Home:
+			return i18nFor(currentLang, I18nKey.home);
+
+		case LinkPreset.Archive:
+			return i18nFor(currentLang, I18nKey.archive);
+
+		case LinkPreset.About:
+			return i18nFor(currentLang, I18nKey.about);
+
+		default:
+			return "";
+	}
+}
+
+function getLocalizedPath(path: string): string {
+	const normalizedPath = path.startsWith("/")
+		? path
+		: `/${path}`;
+
+	if (normalizedPath === "/") {
+		return `/${currentLang}/`;
+	}
+
+	return `/${currentLang}${normalizedPath}`;
+}
+
+const links: NavBarLink[] = navBarConfig.links.map(
 	(item: NavBarLink | LinkPreset): NavBarLink => {
 		if (typeof item === "number") {
-			return LinkPresets[item];
+			const preset = LinkPresets[item];
+
+			return {
+				...preset,
+				name: getPresetName(item),
+				url: getLocalizedPath(preset.url),
+			};
 		}
-		return item;
+
+		if (item.external) {
+			return item;
+		}
+
+		return {
+			...item,
+			url: getLocalizedPath(item.url),
+		};
 	},
 );
 ---
+
 <div id="navbar" class="z-50 onload-animation">
-    <div class="absolute h-8 left-0 right-0 -top-8 bg-[var(--card-bg)] transition"></div> <!-- used for onload animation -->
-    <div class:list={[
-        className,
-        "card-base !overflow-visible max-w-[var(--page-width)] h-[4.5rem] !rounded-t-none mx-auto flex items-center justify-between px-4"]}>
-        <a href={url('/')} class="btn-plain scale-animation rounded-lg h-[3.25rem] px-5 font-bold active:scale-95">
-            <div class="flex flex-row text-[var(--primary)] items-center text-md">
-                <Icon name="material-symbols:home-outline-rounded" class="text-[1.75rem] mb-1 mr-2" />
-                {siteConfig.title}
-            </div>
-        </a>
-        <div class="hidden md:flex">
-            {links.map((l) => {
-                return <a aria-label={l.name} href={l.external ? l.url : url(l.url)} target={l.external ? "_blank" : null}
-                          class="btn-plain scale-animation rounded-lg h-11 font-bold px-5 active:scale-95"
-                >
-                    <div class="flex items-center">
-                        {l.name}
-                        {l.external && <Icon name="fa6-solid:arrow-up-right-from-square" class="text-[0.875rem] transition -translate-y-[1px] ml-1 text-black/[0.2] dark:text-white/[0.2]"></Icon>}
-                    </div>
-                </a>;
-            })}
-        </div>
-        <div class="flex">
-            <!--<SearchPanel client:load>-->
-            <Search client:only="svelte"></Search>
-            {!siteConfig.themeColor.fixed && (
-                    <button aria-label="Display Settings" class="btn-plain scale-animation rounded-lg h-11 w-11 active:scale-90" id="display-settings-switch">
-                        <Icon name="material-symbols:palette-outline" class="text-[1.25rem]"></Icon>
-                    </button>
-            )}
-            <LightDarkSwitch client:only="svelte"></LightDarkSwitch>
-            <button aria-label="Menu" name="Nav Menu" class="btn-plain scale-animation rounded-lg w-11 h-11 active:scale-90 md:!hidden" id="nav-menu-switch">
-                <Icon name="material-symbols:menu-rounded" class="text-[1.25rem]"></Icon>
-            </button>
-        </div>
-        <NavMenuPanel links={links}></NavMenuPanel>
-        <DisplaySettings client:only="svelte"></DisplaySettings>
-    </div>
+	<div
+		class="absolute h-8 left-0 right-0 -top-8 bg-[var(--card-bg)] transition"
+	></div>
+
+	<div
+		class:list={[
+			className,
+			"card-base !overflow-visible max-w-[var(--page-width)] h-[4.5rem] !rounded-t-none mx-auto flex items-center justify-between px-4",
+		]}
+	>
+		<a
+	        href={url(`/${currentLang}/`)}
+	        class="btn-plain scale-animation rounded-lg h-[3.25rem] px-5 font-bold active:scale-95"
+        >
+			<div
+				class="flex flex-row text-[var(--primary)] items-center text-md"
+			>
+				<Icon
+					name="material-symbols:home-outline-rounded"
+					class="text-[1.75rem] mb-1 mr-2"
+				/>
+				{siteConfig.title}
+			</div>
+		</a>
+
+		<div class="hidden md:flex">
+			{
+				links.map((link) => (
+					<a
+						aria-label={link.name}
+						href={link.external ? link.url : url(link.url)}
+						target={link.external ? "_blank" : null}
+						class="btn-plain scale-animation rounded-lg h-11 font-bold px-5 active:scale-95"
+					>
+						<div class="flex items-center">
+							{link.name}
+
+							{
+								link.external && (
+									<Icon
+										name="fa6-solid:arrow-up-right-from-square"
+										class="text-[0.875rem] transition -translate-y-[1px] ml-1 text-black/[0.2] dark:text-white/[0.2]"
+									/>
+								)
+							}
+						</div>
+					</a>
+				))
+			}
+		</div>
+
+		<div class="flex">
+			<Search client:only="svelte" />
+
+			<LanguageSwitch variant="desktop" />
+
+			{
+				!siteConfig.themeColor.fixed && (
+					<button
+						aria-label="Display Settings"
+						class="btn-plain scale-animation rounded-lg h-11 w-11 active:scale-90"
+						id="display-settings-switch"
+					>
+						<Icon
+							name="material-symbols:palette-outline"
+							class="text-[1.25rem]"
+						/>
+					</button>
+				)
+			}
+
+			<LightDarkSwitch client:only="svelte" />
+
+			<button
+				aria-label="Menu"
+				name="Nav Menu"
+				class="btn-plain scale-animation rounded-lg w-11 h-11 active:scale-90 md:!hidden"
+				id="nav-menu-switch"
+			>
+				<Icon
+					name="material-symbols:menu-rounded"
+					class="text-[1.25rem]"
+				/>
+			</button>
+		</div>
+
+		<NavMenuPanel links={links} />
+
+		<DisplaySettings client:only="svelte" />
+	</div>
 </div>
 
 <script>
-function switchTheme() {
-    if (localStorage.theme === 'dark') {
-        document.documentElement.classList.remove('dark');
-        localStorage.theme = 'light';
-    } else {
-        document.documentElement.classList.add('dark');
-        localStorage.theme = 'dark';
-    }
-}
+	function switchTheme() {
+		if (localStorage.theme === "dark") {
+			document.documentElement.classList.remove("dark");
+			localStorage.theme = "light";
+		} else {
+			document.documentElement.classList.add("dark");
+			localStorage.theme = "dark";
+		}
+	}
 
-function loadButtonScript() {
-    let switchBtn = document.getElementById("scheme-switch");
-    if (switchBtn) {
-        switchBtn.onclick = function () {
-            switchTheme()
-        };
-    }
+	function loadButtonScript() {
+		const switchBtn = document.getElementById("scheme-switch");
 
-    let settingBtn = document.getElementById("display-settings-switch");
-    if (settingBtn) {
-        settingBtn.onclick = function () {
-            let settingPanel = document.getElementById("display-setting");
-            if (settingPanel) {
-                settingPanel.classList.toggle("float-panel-closed");
-            }
-        };
-    }
+		if (switchBtn) {
+			switchBtn.onclick = function () {
+				switchTheme();
+			};
+		}
 
-    let menuBtn = document.getElementById("nav-menu-switch");
-    if (menuBtn) {
-        menuBtn.onclick = function () {
-            let menuPanel = document.getElementById("nav-menu-panel");
-            if (menuPanel) {
-                menuPanel.classList.toggle("float-panel-closed");
-            }
-        };
-    }
-}
+		const settingBtn = document.getElementById(
+			"display-settings-switch",
+		);
 
-loadButtonScript();
+		if (settingBtn) {
+			settingBtn.onclick = function () {
+				const settingPanel =
+					document.getElementById("display-setting");
+
+				if (settingPanel) {
+					settingPanel.classList.toggle(
+						"float-panel-closed",
+					);
+				}
+			};
+		}
+
+		const menuBtn = document.getElementById("nav-menu-switch");
+
+		if (menuBtn) {
+			menuBtn.onclick = function () {
+				const menuPanel =
+					document.getElementById("nav-menu-panel");
+
+				if (menuPanel) {
+					menuPanel.classList.toggle(
+						"float-panel-closed",
+					);
+				}
+			};
+		}
+	}
+
+	loadButtonScript();
 </script>
 
-{import.meta.env.PROD && <script is:inline define:vars={{scriptUrl: url('/pagefind/pagefind.js')}}>
-async function loadPagefind() {
-    try {
-        const response = await fetch(scriptUrl, { method: 'HEAD' });
-        if (!response.ok) {
-            throw new Error(`Pagefind script not found: ${response.status}`);
-        }
+{
+	import.meta.env.PROD && (
+		<script
+			is:inline
+			define:vars={{
+				scriptUrl: url("/pagefind/pagefind.js"),
+			}}
+		>
+			async function loadPagefind() {
+				try {
+					const response = await fetch(scriptUrl, {
+						method: "HEAD",
+					});
 
-        const pagefind = await import(scriptUrl);
+					if (!response.ok) {
+						throw new Error(
+							`Pagefind script not found: ${response.status}`,
+						);
+					}
 
-        await pagefind.options({
-            excerptLength: 20
-        });
+					const pagefind = await import(scriptUrl);
 
-        window.pagefind = pagefind;
+					await pagefind.options({
+						excerptLength: 20,
+					});
 
-        document.dispatchEvent(new CustomEvent('pagefindready'));
-        console.log('Pagefind loaded and initialized successfully, event dispatched.');
-    } catch (error) {
-        console.error('Failed to load Pagefind:', error);
-        window.pagefind = {
-            search: () => Promise.resolve({ results: [] }),
-            options: () => Promise.resolve(),
-        };
-        document.dispatchEvent(new CustomEvent('pagefindloaderror'));
-        console.log('Pagefind load error, event dispatched.');
-    }
+					window.pagefind = pagefind;
+
+					document.dispatchEvent(
+						new CustomEvent("pagefindready"),
+					);
+
+					console.log(
+						"Pagefind loaded and initialized successfully, event dispatched.",
+					);
+				} catch (error) {
+					console.error(
+						"Failed to load Pagefind:",
+						error,
+					);
+
+					window.pagefind = {
+						search: () =>
+							Promise.resolve({ results: [] }),
+						options: () => Promise.resolve(),
+					};
+
+					document.dispatchEvent(
+						new CustomEvent("pagefindloaderror"),
+					);
+
+					console.log(
+						"Pagefind load error, event dispatched.",
+					);
+				}
+			}
+
+			if (document.readyState === "loading") {
+				document.addEventListener(
+					"DOMContentLoaded",
+					loadPagefind,
+				);
+			} else {
+				loadPagefind();
+			}
+		</script>
+	)
 }
-
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', loadPagefind);
-} else {
-    loadPagefind();
-}
-</script>}

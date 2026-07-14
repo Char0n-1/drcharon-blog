@@ -8,10 +8,10 @@ import expressiveCode from "astro-expressive-code";
 import icon from "astro-icon";
 import { defineConfig } from "astro/config";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
-import rehypeComponents from "rehype-components"; /* Render the custom directive content */
+import rehypeComponents from "rehype-components";
 import rehypeKatex from "rehype-katex";
 import rehypeSlug from "rehype-slug";
-import remarkDirective from "remark-directive"; /* Handle directives */
+import remarkDirective from "remark-directive";
 import remarkGithubAdmonitionsToDirectives from "remark-github-admonitions-to-directives";
 import remarkMath from "remark-math";
 import remarkSectionize from "remark-sectionize";
@@ -29,15 +29,23 @@ export default defineConfig({
 	site: "https://fuwari.vercel.app/",
 	base: "/",
 	trailingSlash: "always",
+
+	i18n: {
+		locales: ["en", "zh"],
+		defaultLocale: "en",
+		routing: {
+			prefixDefaultLocale: true,
+			redirectToDefaultLocale: false,
+		},
+	},
+
 	integrations: [
 		tailwind({
 			nesting: true,
 		}),
 		swup({
 			theme: false,
-			animationClass: "transition-swup-", // see https://swup.js.org/options/#animationselector
-			// the default value `transition-` cause transition delay
-			// when the Tailwind class `transition-all` is used
+			animationClass: "transition-swup-",
 			containers: ["main", "#toc"],
 			smoothScrolling: true,
 			cache: true,
@@ -56,17 +64,20 @@ export default defineConfig({
 			},
 		}),
 		expressiveCode({
-			themes: [expressiveCodeConfig.theme, expressiveCodeConfig.theme],
+			themes: [
+				expressiveCodeConfig.theme,
+				expressiveCodeConfig.theme,
+			],
 			plugins: [
 				pluginCollapsibleSections(),
 				pluginLineNumbers(),
 				pluginLanguageBadge(),
-				pluginCustomCopyButton()
+				pluginCustomCopyButton(),
 			],
 			defaultProps: {
 				wrap: true,
 				overridesByLang: {
-					'shellsession': {
+					shellsession: {
 						showLineNumbers: false,
 					},
 				},
@@ -76,32 +87,38 @@ export default defineConfig({
 				borderRadius: "0.75rem",
 				borderColor: "none",
 				codeFontSize: "0.875rem",
-				codeFontFamily: "'JetBrains Mono Variable', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
+				codeFontFamily:
+					"'JetBrains Mono Variable', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
 				codeLineHeight: "1.5rem",
 				frames: {
 					editorBackground: "var(--codeblock-bg)",
 					terminalBackground: "var(--codeblock-bg)",
-					terminalTitlebarBackground: "var(--codeblock-topbar-bg)",
-					editorTabBarBackground: "var(--codeblock-topbar-bg)",
+					terminalTitlebarBackground:
+						"var(--codeblock-topbar-bg)",
+					editorTabBarBackground:
+						"var(--codeblock-topbar-bg)",
 					editorActiveTabBackground: "none",
-					editorActiveTabIndicatorBottomColor: "var(--primary)",
+					editorActiveTabIndicatorBottomColor:
+						"var(--primary)",
 					editorActiveTabIndicatorTopColor: "none",
-					editorTabBarBorderBottomColor: "var(--codeblock-topbar-bg)",
-					terminalTitlebarBorderBottomColor: "none"
+					editorTabBarBorderBottomColor:
+						"var(--codeblock-topbar-bg)",
+					terminalTitlebarBorderBottomColor: "none",
 				},
 				textMarkers: {
 					delHue: 0,
 					insHue: 180,
-					markHue: 250
-				}
+					markHue: 250,
+				},
 			},
 			frames: {
 				showCopyToClipboardButton: false,
-			}
+			},
 		}),
-        svelte(),
+		svelte(),
 		sitemap(),
 	],
+
 	markdown: {
 		remarkPlugins: [
 			remarkMath,
@@ -120,11 +137,28 @@ export default defineConfig({
 				{
 					components: {
 						github: GithubCardComponent,
-						note: (x, y) => AdmonitionComponent(x, y, "note"),
-						tip: (x, y) => AdmonitionComponent(x, y, "tip"),
-						important: (x, y) => AdmonitionComponent(x, y, "important"),
-						caution: (x, y) => AdmonitionComponent(x, y, "caution"),
-						warning: (x, y) => AdmonitionComponent(x, y, "warning"),
+						note: (x, y) =>
+							AdmonitionComponent(x, y, "note"),
+						tip: (x, y) =>
+							AdmonitionComponent(x, y, "tip"),
+						important: (x, y) =>
+							AdmonitionComponent(
+								x,
+								y,
+								"important",
+							),
+						caution: (x, y) =>
+							AdmonitionComponent(
+								x,
+								y,
+								"caution",
+							),
+						warning: (x, y) =>
+							AdmonitionComponent(
+								x,
+								y,
+								"warning",
+							),
 					},
 				},
 			],
@@ -153,17 +187,22 @@ export default defineConfig({
 			],
 		],
 	},
+
 	vite: {
 		build: {
 			rollupOptions: {
 				onwarn(warning, warn) {
-					// temporarily suppress this warning
 					if (
-						warning.message.includes("is dynamically imported by") &&
-						warning.message.includes("but also statically imported by")
+						warning.message.includes(
+							"is dynamically imported by",
+						) &&
+						warning.message.includes(
+							"but also statically imported by",
+						)
 					) {
 						return;
 					}
+
 					warn(warning);
 				},
 			},

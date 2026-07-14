@@ -1,7 +1,11 @@
 import { type CollectionEntry, getCollection } from "astro:content";
 import I18nKey from "@i18n/i18nKey";
-import { i18n } from "@i18n/translation";
-import { getCategoryUrl } from "@utils/url-utils.ts";
+import { i18n, i18nFor } from "@i18n/translation";
+import type { SiteLang } from "./locale-utils";
+import {
+	getCategoryUrl,
+	getLocalizedCategoryUrl,
+} from "@utils/url-utils.ts";
 
 // // Retrieve posts and sort them by publication date
 async function getRawSortedPosts() {
@@ -51,25 +55,42 @@ export type Tag = {
 	count: number;
 };
 
-export async function getTagList(): Promise<Tag[]> {
+export async function getTagList(
+	siteLang?: SiteLang,
+): Promise<Tag[]> {
 	const allBlogPosts = await getCollection<"posts">("posts", ({ data }) => {
-		return import.meta.env.PROD ? data.draft !== true : true;
+		const isPublished = import.meta.env.PROD
+			? data.draft !== true
+			: true;
+
+		const isCorrectLanguage =
+			!siteLang || data.lang === siteLang;
+
+		return isPublished && isCorrectLanguage;
 	});
 
-	const countMap: { [key: string]: number } = {};
-	allBlogPosts.forEach((post: { data: { tags: string[] } }) => {
-		post.data.tags.forEach((tag: string) => {
-			if (!countMap[tag]) countMap[tag] = 0;
-			countMap[tag]++;
+	const countMap: Record<string, number> = {};
+
+	allBlogPosts.forEach((post) => {
+		post.data.tags.forEach((tag) => {
+			const tagName = tag.trim();
+
+			if (!tagName) {
+				return;
+			}
+
+			countMap[tagName] = (countMap[tagName] ?? 0) + 1;
 		});
 	});
 
-	// sort tags
-	const keys: string[] = Object.keys(countMap).sort((a, b) => {
-		return a.toLowerCase().localeCompare(b.toLowerCase());
-	});
+	const keys = Object.keys(countMap).sort((a, b) =>
+		a.toLowerCase().localeCompare(b.toLowerCase()),
+	);
 
-	return keys.map((key) => ({ name: key, count: countMap[key] }));
+	return keys.map((key) => ({
+		name: key,
+		count: countMap[key],
+	}));
 }
 
 export type Category = {
@@ -78,37 +99,49 @@ export type Category = {
 	url: string;
 };
 
-export async function getCategoryList(): Promise<Category[]> {
+export async function getCategoryList(
+	siteLang?: SiteLang,
+): Promise<Category[]> {
 	const allBlogPosts = await getCollection<"posts">("posts", ({ data }) => {
-		return import.meta.env.PROD ? data.draft !== true : true;
+		const isPublished = import.meta.env.PROD
+			? data.draft !== true
+			: true;
+
+		const isCorrectLanguage =
+			!siteLang || data.lang === siteLang;
+
+		return isPublished && isCorrectLanguage;
 	});
+
 	const count: { [key: string]: number } = {};
-	allBlogPosts.forEach((post: { data: { category: string | null } }) => {
+
+	allBlogPosts.forEach((post) => {
 		if (!post.data.category) {
-			const ucKey = i18n(I18nKey.uncategorized);
-			count[ucKey] = count[ucKey] ? count[ucKey] + 1 : 1;
+			const uncategorizedName = siteLang
+				? i18nFor(siteLang, I18nKey.uncategorized)
+				: i18n(I18nKey.uncategorized);
+
+			count[uncategorizedName] =
+				(count[uncategorizedName] ?? 0) + 1;
+
 			return;
 		}
 
-		const categoryName =
-			typeof post.data.category === "string"
-				? post.data.category.trim()
-				: String(post.data.category).trim();
+		const categoryName = String(post.data.category).trim();
 
-		count[categoryName] = count[categoryName] ? count[categoryName] + 1 : 1;
+		count[categoryName] =
+			(count[categoryName] ?? 0) + 1;
 	});
 
-	const lst = Object.keys(count).sort((a, b) => {
-		return a.toLowerCase().localeCompare(b.toLowerCase());
-	});
+	const categories = Object.keys(count).sort((a, b) =>
+		a.toLowerCase().localeCompare(b.toLowerCase()),
+	);
 
-	const ret: Category[] = [];
-	for (const c of lst) {
-		ret.push({
-			name: c,
-			count: count[c],
-			url: getCategoryUrl(c),
-		});
-	}
-	return ret;
+	return categories.map((category) => ({
+		name: category,
+		count: count[category],
+		url: siteLang
+			? getLocalizedCategoryUrl(siteLang, category)
+			: getCategoryUrl(category),
+	}));
 }

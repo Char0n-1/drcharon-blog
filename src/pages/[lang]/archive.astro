@@ -1,0 +1,52 @@
+---
+import ArchivePanel from "@components/ArchivePanel.svelte";
+import I18nKey from "@i18n/i18nKey";
+import { i18nFor } from "@i18n/translation";
+import MainGridLayout from "@layouts/MainGridLayout.astro";
+import { getSortedPostsList } from "@utils/content-utils";
+import {
+	normalizeSiteLang,
+	SITE_LANGUAGES,
+	type SiteLang,
+} from "@utils/locale-utils";
+import { getLocalizedPath } from "@utils/navigation-utils";
+
+export function getStaticPaths() {
+	return SITE_LANGUAGES.map((lang) => ({
+		params: { lang },
+	}));
+}
+
+const siteLang = normalizeSiteLang(Astro.params.lang);
+
+const allPosts = await getSortedPostsList();
+
+const sortedPostsList = allPosts
+	.filter((post) => post.data.lang === siteLang)
+	.map((post) => {
+		const slugParts = post.slug.split("/");
+		const translationKey =
+			slugParts.length > 1
+				? slugParts.slice(0, -1).join("/")
+				: post.slug;
+
+		return {
+			...post,
+			url: getLocalizedPath(
+				siteLang as SiteLang,
+				`/posts/${translationKey}/`,
+			),
+		};
+	});
+---
+
+<MainGridLayout
+	siteLang={siteLang}
+	title={i18nFor(siteLang, I18nKey.archive)}
+>
+	<ArchivePanel
+		siteLang={siteLang}
+		sortedPosts={sortedPostsList}
+		client:only="svelte"
+	/>
+</MainGridLayout>

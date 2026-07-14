@@ -10,7 +10,19 @@ const postsCollection = defineCollection({
 		image: z.string().optional().default(""),
 		tags: z.array(z.string()).optional().default([]),
 		category: z.string().optional().nullable().default(""),
+
+		/*
+		 * Bilingual content fields
+		 *
+		 * lang:
+		 *   Language of this specific article.
+		 *
+		 * translationKey:
+		 *   Stable public identifier shared by all translations
+		 *   of the same article.
+		 */
 		lang: z.string().optional().default(""),
+		translationKey: z.string().optional().default(""),
 
 		/* For internal use */
 		prevTitle: z.string().default(""),
@@ -19,9 +31,11 @@ const postsCollection = defineCollection({
 		nextSlug: z.string().default(""),
 	}),
 });
+
 const specCollection = defineCollection({
 	schema: z.object({}),
 });
+
 export const collections = {
 	posts: postsCollection,
 	spec: specCollection,

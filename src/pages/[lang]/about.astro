@@ -1,0 +1,52 @@
+---
+import { getEntry, render } from "astro:content";
+import Markdown from "@components/misc/Markdown.astro";
+import I18nKey from "../../i18n/i18nKey";
+import { i18nFor } from "../../i18n/translation";
+import MainGridLayout from "../../layouts/MainGridLayout.astro";
+import {
+	normalizeSiteLang,
+	SITE_LANGUAGES,
+} from "../../utils/locale-utils";
+
+export function getStaticPaths() {
+	return SITE_LANGUAGES.map((lang) => ({
+		params: {
+			lang,
+		},
+	}));
+}
+
+const lang = normalizeSiteLang(Astro.params.lang);
+
+const aboutPost = await getEntry(
+	"spec",
+	`about/${lang}`,
+);
+
+if (!aboutPost) {
+	throw new Error(
+		`About page content not found for language: ${lang}`,
+	);
+}
+
+const { Content } = await render(aboutPost);
+
+const pageTitle = i18nFor(lang, I18nKey.about);
+---
+
+<MainGridLayout
+	title={pageTitle}
+	description={pageTitle}
+	lang={lang}
+>
+	<div
+		class="flex w-full rounded-[var(--radius-large)] overflow-hidden relative min-h-32"
+	>
+		<div class="card-base z-10 px-9 py-6 relative w-full">
+			<Markdown class="mt-2">
+				<Content />
+			</Markdown>
+		</div>
+	</div>
+</MainGridLayout>

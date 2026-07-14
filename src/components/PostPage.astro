@@ -1,28 +1,77 @@
 ---
 import type { CollectionEntry } from "astro:content";
-import { getPostUrlBySlug } from "@utils/url-utils";
+import type { Page } from "astro";
+import {
+	normalizeSiteLang,
+	type SiteLang,
+} from "../utils/locale-utils";
+import { getLocalizedPath } from "../utils/navigation-utils";
 import PostCard from "./PostCard.astro";
 
-const { page } = Astro.props;
+interface Props {
+	page: Page<CollectionEntry<"posts">>;
+	siteLang?: SiteLang | string;
+}
+
+const {
+	page,
+	siteLang,
+} = Astro.props;
+
+const currentLang = normalizeSiteLang(siteLang);
+
+function getTranslationKey(
+	entry: CollectionEntry<"posts">,
+): string | null {
+	const normalizedId = entry.id.replaceAll("\\", "/");
+	const parts = normalizedId.split("/");
+
+	if (parts.length < 2) {
+		return null;
+	}
+
+	return parts.at(-2) || null;
+}
+
+function getLocalizedPostUrl(
+	entry: CollectionEntry<"posts">,
+): string {
+	const translationKey = getTranslationKey(entry);
+
+	if (!translationKey) {
+		return "#";
+	}
+
+	return getLocalizedPath(
+		currentLang,
+		`/posts/${translationKey}/`,
+	);
+}
 
 let delay = 0;
 const interval = 50;
 ---
-<div class="transition flex flex-col rounded-[var(--radius-large)] bg-[var(--card-bg)] py-1 md:py-0 md:bg-transparent md:gap-4 mb-4">
-    {page.data.map((entry: CollectionEntry<"posts">) => (
-        <PostCard
-                entry={entry}
-                title={entry.data.title}
-                tags={entry.data.tags}
-                category={entry.data.category}
-                published={entry.data.published}
-                updated={entry.data.updated}
-                url={getPostUrlBySlug(entry.slug)}
-                image={entry.data.image}
-                description={entry.data.description}
-                draft={entry.data.draft}
-                class:list="onload-animation"
-                style={`animation-delay: calc(var(--content-delay) + ${delay++ * interval}ms);`}
-        ></PostCard>
-    ))}
+
+<div
+	class="transition flex flex-col rounded-[var(--radius-large)] bg-[var(--card-bg)] py-1 md:py-0 md:bg-transparent md:gap-4 mb-4"
+>
+	{
+		page.data.map((entry) => (
+			<PostCard
+				entry={entry}
+				title={entry.data.title}
+				tags={entry.data.tags}
+				category={entry.data.category}
+				published={entry.data.published}
+				updated={entry.data.updated}
+				url={getLocalizedPostUrl(entry)}
+				image={entry.data.image}
+				description={entry.data.description}
+				draft={entry.data.draft}
+				siteLang={currentLang}
+				class:list="onload-animation"
+				style={`animation-delay: calc(var(--content-delay) + ${delay++ * interval}ms);`}
+			/>
+		))
+	}
 </div>
