@@ -586,3 +586,627 @@ Thumbprint: <REDACTED>
 7. 客户端仍保留着调整前的认证状态，重启后才完整刷新。
 
 
+# Troubleshooting Toolbox
+
+下面是这次 Windows Hello for Business Key Trust 排障中使用到的主要命令。
+
+示例中的名称均已匿名化：
+
+```text
+域名：contoso.local
+用户：test.user
+客户端：CLIENT-01
+域控制器：DC01 / DC02
+企业 CA：CONTOSO-ROOT-CA
+```
+
+---
+
+## 1. 检查设备加入和 Windows Hello 状态
+
+```powershell
+dsregcmd /status
+```
+
+重点检查以下字段：
+
+```text
+AzureAdJoined
+DomainJoined
+DeviceAuthStatus
+NgcSet
+AzureAdPrt
+CloudTgt
+OnPremTgt
+```
+
+Windows Hello Provisioning 相关状态位于：
+
+```text
++----------------------------------------------------------------------+
+| Ngc Prerequisite Check                                               |
++----------------------------------------------------------------------+
+
+            IsDeviceJoined
+             IsUserAzureAD
+             PolicyEnabled
+          PostLogonEnabled
+            DeviceEligible
+        SessionIsNotRemote
+            CertEnrollment
+          AdfsRefreshToken
+             AdfsRaIsReady
+    LogonCertTemplateReady
+              PreReqResult
+```
+
+常见结果：
+
+```text
+NgcSet       : NO
+PreReqResult : WillNotProvision
+```
+
+表示 Windows Hello 尚未完成 Provisioning。
+
+```text
+NgcSet       : YES
+PreReqResult : WillProvision
+```
+
+表示设备已经满足 Provisioning 条件，或者 Windows Hello 已完成初始化。
+
+需要查看更详细的设备注册过程时，可以使用：
+
+```powershell
+dsregcmd /status /debug
+```
+
+---
+
+## 2. 检查 Windows Hello 策略注册表
+
+检查 Windows Hello 是否被配置为使用 Cloud Trust：
+
+```powershell
+Get-ItemProperty `
+    -Path "HKLM:\SOFTWARE\Policies\Microsoft\PassportForWork" `
+    -ErrorAction SilentlyContinue
+```
+
+重点观察：
+
+```text
+Enabled
+UseCertificateForOnPremAuth
+UseCloudTrustForOnPremAuth
+```
+
+也可以单独读取：
+
+```powershell
+Get-ItemPropertyValue `
+    -Path "HKLM:\SOFTWARE\Policies\Microsoft\PassportForWork" `
+    -Name "UseCloudTrustForOnPremAuth" `
+    -ErrorAction SilentlyContinue
+```
+
+```powershell
+Get-ItemPropertyValue `
+    -Path "HKLM:\SOFTWARE\Policies\Microsoft\PassportForWork" `
+    -Name "UseCertificateForOnPremAuth" `
+    -ErrorAction SilentlyContinue
+```
+
+我们最终确认的状态是：
+
+```text
+UseCloudTrustForOnPremAuth    : 0
+UseCertificateForOnPremAuth  : 0
+```
+
+这表示：
+
+- 没有使用 Cloud Trust；
+- 没有使用 Certificate Trust；
+- 当前部署目标是 Key Trust。
+
+检查完 Intune 策略后，可以强制刷新策略：
+
+```powershell
+gpupdate /force
+```
+
+---
+
+## 3. 查询 Windows Hello Operational 日志
+
+列出最近的 Windows Hello 事件：
+
+```powershell
+Get-WinEvent `
+    -LogName "Microsoft-Windows-HelloForBusiness/Operational" `
+    -MaxEvents 100 |
+    Select-Object TimeCreated, Id, LevelDisplayName, Message |
+    Format-List
+```
+
+只查看失败或警告事件：
+
+```powershell
+Get-WinEvent `
+    -FilterHashtable @{
+        LogName = "Microsoft-Windows-HelloForBusiness/Operational"
+        Level   = 2, 3
+    } `
+    -ErrorAction SilentlyContinue |
+    Select-Object TimeCreated, Id, LevelDisplayName, Message |
+    Format-List
+```
+
+查看 Authentication 事件：
+
+```powershell
+Get-WinEvent `
+    -FilterHashtable @{
+        LogName = "Microsoft-Windows-HelloForBusiness/Operational"
+        Id      = 7001
+    } `
+    -ErrorAction SilentlyContinue |
+    Select-Object TimeCreated, Id, Message |
+    Format-List
+```
+
+当时看到的关键信息包括：
+
+```text
+Deployment Type          : Key Trust
+Authentication Error     : 0xC000006D
+Authentication SubStatus : 0xC00002F9
+```
+
+后面的测试中还出现过：
+
+```text
+Authentication Error : 0xC0000380
+```
+
+查询用于确认部署模式的事件：
+
+```powershell
+Get-WinEvent `
+    -FilterHashtable @{
+        LogName = "Microsoft-Windows-HelloForBusiness/Operational"
+        Id      = 5205
+    } `
+    -ErrorAction SilentlyContinue |
+    Select-Object TimeCreated, Id, Message |
+    Format-List
+```
+
+关键结果：
+
+```text
+Certificate Required : False
+Use Cloud Trust      : False
+Deployment Type      : Key Trust
+```
+
+按关键词过滤日志：
+
+```powershell
+Get-WinEvent `
+    -LogName "Microsoft-Windows-HelloForBusiness/Operational" `
+    -MaxEvents 200 |
+    Where-Object {
+        $_.Message -match "Authentication|Key Trust|Cloud Trust|Provision"
+    } |
+    Select-Object TimeCreated, Id, Message |
+    Format-List
+```
+
+---
+
+## 4. 检查 Windows Hello Key 是否写入 Active Directory
+
+首先导入 Active Directory 模块：
+
+```powershell
+Import-Module ActiveDirectory
+```
+
+检查用户的 `msDS-KeyCredentialLink`：
+
+```powershell
+Get-ADUser test.user `
+    -Properties msDS-KeyCredentialLink |
+    Select-Object SamAccountName, msDS-KeyCredentialLink
+```
+
+只显示 Key Credential 内容：
+
+```powershell
+Get-ADUser test.user `
+    -Properties msDS-KeyCredentialLink |
+    Select-Object -ExpandProperty msDS-KeyCredentialLink
+```
+
+只统计写入了多少条 Key Credential：
+
+```powershell
+(
+    Get-ADUser test.user `
+        -Properties msDS-KeyCredentialLink
+).msDS-KeyCredentialLink.Count
+```
+
+输出通常类似：
+
+```text
+B:828:00020000200001...
+```
+
+这些内容很长，不需要手动解析。
+
+只要属性不是空的，就说明 Windows Hello 公钥已经成功写入用户对象。
+
+---
+
+## 5. 检查 AD 和 Forest Functional Level
+
+检查 Forest Functional Level：
+
+```powershell
+Get-ADForest |
+    Select-Object Name, ForestMode
+```
+
+检查 Domain Functional Level：
+
+```powershell
+Get-ADDomain |
+    Select-Object DNSRoot, DomainMode
+```
+
+当时环境中确认到：
+
+```text
+Forest Functional Level : Windows2008R2Forest
+Domain Functional Level : Windows2012R2Domain
+```
+
+---
+
+## 6. 检查域控制器的本机证书
+
+在 Domain Controller 上查看本机计算机证书存储：
+
+```powershell
+certutil -store My
+```
+
+筛选 Kerberos 相关内容：
+
+```powershell
+certutil -store My |
+    Select-String `
+        -Pattern "Kerberos Authentication|Domain Controller Authentication|Issuer|Subject|Template"
+```
+
+使用 PowerShell 查看本机证书：
+
+```powershell
+Get-ChildItem Cert:\LocalMachine\My |
+    Select-Object Subject, Issuer, Thumbprint, NotBefore, NotAfter,
+        EnhancedKeyUsageList
+```
+
+筛选带有 Kerberos Authentication EKU 的证书：
+
+```powershell
+Get-ChildItem Cert:\LocalMachine\My |
+    Where-Object {
+        $_.EnhancedKeyUsageList.FriendlyName -contains "Kerberos Authentication"
+    } |
+    Select-Object Subject, Issuer, Thumbprint, NotBefore, NotAfter,
+        EnhancedKeyUsageList
+```
+
+检查即将过期的证书：
+
+```powershell
+Get-ChildItem Cert:\LocalMachine\My |
+    Where-Object {
+        $_.NotAfter -lt (Get-Date).AddDays(60)
+    } |
+    Select-Object Subject, Issuer, Thumbprint, NotAfter
+```
+
+---
+
+## 7. 查询 KDC Operational 日志
+
+列出最近的 KDC 事件：
+
+```powershell
+Get-WinEvent `
+    -LogName "Microsoft-Windows-Kerberos-Key-Distribution-Center/Operational" `
+    -MaxEvents 100 |
+    Select-Object TimeCreated, Id, LevelDisplayName, Message |
+    Format-List
+```
+
+只查看 Event 200 和 Event 302：
+
+```powershell
+Get-WinEvent `
+    -FilterHashtable @{
+        LogName = "Microsoft-Windows-Kerberos-Key-Distribution-Center/Operational"
+        Id      = 200, 302
+    } `
+    -ErrorAction SilentlyContinue |
+    Select-Object TimeCreated, Id, LevelDisplayName, Message |
+    Format-List
+```
+
+Event 200 表示 KDC 找不到合适的证书，常见信息类似：
+
+```text
+The Key Distribution Center cannot find a suitable certificate
+to use for smart card logons, or the KDC certificate could not
+be verified.
+```
+
+Event 302 表示 KDC 已经成功加载证书，关键字段包括：
+
+```text
+Issuer
+Template
+Thumbprint
+```
+
+筛选证书相关 KDC 事件：
+
+```powershell
+Get-WinEvent `
+    -LogName "Microsoft-Windows-Kerberos-Key-Distribution-Center/Operational" `
+    -MaxEvents 200 |
+    Where-Object {
+        $_.Message -match "certificate|Kerberos Authentication|KDC"
+    } |
+    Select-Object TimeCreated, Id, Message |
+    Format-List
+```
+
+---
+
+## 8. 检查 Enterprise CA 是否可用
+
+列出域内可用的 Enterprise CA：
+
+```powershell
+certutil -config - -ping
+```
+
+正常情况下会返回类似：
+
+```text
+DC01.contoso.local\CONTOSO-ROOT-CA
+```
+
+查看 Enterprise CA 配置：
+
+```powershell
+certutil -config - -
+```
+
+检查 CA 服务：
+
+```powershell
+Get-Service CertSvc
+```
+
+启动 CA 服务：
+
+```powershell
+Start-Service CertSvc
+```
+
+重启 CA 服务：
+
+```powershell
+Restart-Service CertSvc
+```
+
+检查 AD CS 角色：
+
+```powershell
+Get-WindowsFeature AD-Certificate
+```
+
+列出所有已安装的 AD CS 相关角色服务：
+
+```powershell
+Get-WindowsFeature |
+    Where-Object {
+        $_.Name -like "ADCS*"
+    }
+```
+
+---
+
+## 9. 检查 NTAuth Enterprise Store
+
+验证 Enterprise NTAuth 存储：
+
+```powershell
+certutil -enterprise -verifystore NTAuth
+```
+
+在输出中确认新的 CA：
+
+```text
+CONTOSO-ROOT-CA
+```
+
+查看 NTAuth 中发布的所有证书：
+
+```powershell
+certutil -enterprise -viewstore NTAuth
+```
+
+也可以从 Active Directory 中读取 NTAuthCertificates 对象：
+
+```powershell
+$configurationNamingContext = (
+    Get-ADRootDSE
+).configurationNamingContext
+
+Get-ADObject `
+    -Identity "CN=NTAuthCertificates,CN=Public Key Services,CN=Services,$configurationNamingContext" `
+    -Properties cACertificate
+```
+
+---
+
+## 10. 检查 Active Directory 中发布的旧 CA
+
+获取 Configuration Naming Context：
+
+```powershell
+$configurationNamingContext = (
+    Get-ADRootDSE
+).configurationNamingContext
+```
+
+查看 Enrollment Services 中注册的 Enterprise CA：
+
+```powershell
+Get-ADObject `
+    -SearchBase "CN=Enrollment Services,CN=Public Key Services,CN=Services,$configurationNamingContext" `
+    -LDAPFilter "(objectClass=pKIEnrollmentService)" `
+    -Properties * |
+    Select-Object Name, dNSHostName, DistinguishedName
+```
+
+查看 Certification Authorities 容器：
+
+```powershell
+Get-ADObject `
+    -SearchBase "CN=Certification Authorities,CN=Public Key Services,CN=Services,$configurationNamingContext" `
+    -LDAPFilter "(objectClass=certificationAuthority)" `
+    -Properties * |
+    Select-Object Name, DistinguishedName
+```
+
+查看 AIA 容器：
+
+```powershell
+Get-ADObject `
+    -SearchBase "CN=AIA,CN=Public Key Services,CN=Services,$configurationNamingContext" `
+    -LDAPFilter "(objectClass=certificationAuthority)" `
+    -Properties * |
+    Select-Object Name, DistinguishedName
+```
+
+查看 CDP 容器：
+
+```powershell
+Get-ADObject `
+    -SearchBase "CN=CDP,CN=Public Key Services,CN=Services,$configurationNamingContext" `
+    -Filter * |
+    Select-Object Name, ObjectClass, DistinguishedName
+```
+
+这些命令可以帮助确认 Active Directory 中是否仍然残留已经退役的 CA 对象。
+
+不要在没有备份和影响评估的情况下直接删除这些对象。
+
+---
+
+## 11. 触发证书自动注册
+
+刷新计算机组策略：
+
+```powershell
+gpupdate /force
+```
+
+触发证书自动注册：
+
+```powershell
+certutil -pulse
+```
+
+以本机系统账户重新触发自动注册：
+
+```powershell
+certutil -pulse
+```
+
+检查自动注册相关事件：
+
+```powershell
+Get-WinEvent `
+    -LogName "Microsoft-Windows-CertificateServicesClient-AutoEnrollment/Operational" `
+    -MaxEvents 100 |
+    Select-Object TimeCreated, Id, LevelDisplayName, Message |
+    Format-List
+```
+
+筛选失败事件：
+
+```powershell
+Get-WinEvent `
+    -FilterHashtable @{
+        LogName = "Microsoft-Windows-CertificateServicesClient-AutoEnrollment/Operational"
+        Level   = 2, 3
+    } `
+    -ErrorAction SilentlyContinue |
+    Select-Object TimeCreated, Id, Message |
+    Format-List
+```
+
+完成自动注册后，再次检查证书：
+
+```powershell
+certutil -store My
+```
+
+应当能看到：
+
+```text
+Kerberos Authentication
+Domain Controller Authentication
+Directory Email Replication
+```
+
+---
+
+## 快速诊断顺序
+
+遇到类似问题时，可以按照这个顺序进行：
+
+```text
+1. dsregcmd /status
+2. 检查 NgcSet 和 PreReqResult
+3. 检查 Intune Windows Hello 策略
+4. 查询 HelloForBusiness Operational 日志
+5. 检查 msDS-KeyCredentialLink
+6. 查询 KDC Operational 日志
+7. 检查 DC 的 Kerberos Authentication 证书
+8. 检查 Enterprise CA 和 NTAuth
+9. 触发 DC 证书自动注册
+10. 确认 KDC Event 302
+11. 重启客户端并重新测试 PIN
+```
+
+这套顺序的重点不是把所有命令都运行一遍，而是先判断故障发生在：
+
+```text
+Provisioning
+        或
+Authentication
+```
+
+确定阶段之后，再继续缩小范围。
