@@ -46,33 +46,33 @@ export const navBarConfig: NavBarConfig = {
 		LinkPreset.About,
 		{
 			name: "GitHub",
-			url: "https://github.com/saicaca/fuwari", // Internal links should not include the base path, as it is automatically added
+			url: "https://github.com/Char0n-1/drcharon-blog", // Internal links should not include the base path, as it is automatically added
 			external: true, // Show an external link icon and will open in a new tab
 		},
 	],
 };
 
 export const profileConfig: ProfileConfig = {
-	avatar: "assets/images/demo-avatar.png", // Relative to the /src directory. Relative to the /public directory if it starts with '/'
+	avatar: "assets/images/charon_avatar_hotel.png", // Relative to the /src directory. Relative to the /public directory if it starts with '/'
 	name: "Charon",
 	bio: "Systems, networking, infrastructure, and troubleshooting notes.",
 	links: [
 		{
 			name: "Twitter",
-			icon: "fa6-brands:twitter", // Visit https://icones.js.org/ for icon codes
+			icon: "fa6-brands:instagram", // Visit https://icones.js.org/ for icon codes
 			// You will need to install the corresponding icon set if it's not already included
 			// `pnpm add @iconify-json/<icon-set-name>`
-			url: "https://twitter.com",
+			url: "https://www.instagram.com/tianyi_zhao_?igsh=eGdrMGlrdGF1Njh0&utm_source=qr",
 		},
 		{
 			name: "Steam",
-			icon: "fa6-brands:steam",
-			url: "https://store.steampowered.com",
+			icon: "fa6-brands:linkedin",
+			url: "https://www.linkedin.com/in/tianyi-zhao-94855a330",
 		},
 		{
 			name: "GitHub",
 			icon: "fa6-brands:github",
-			url: "https://github.com/saicaca/fuwari",
+			url: "https://github.com/Char0n-1/drcharon-blog",
 		},
 	],
 };

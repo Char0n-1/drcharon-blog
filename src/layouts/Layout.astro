@@ -27,6 +27,9 @@ interface Props {
 	description?: string;
 	lang?: string;
 	setOGTypeArticle?: boolean;
+
+	canonical?: string;
+	alternates?: Record<string, string>;
 }
 
 let {
@@ -35,6 +38,8 @@ let {
 	description,
 	lang,
 	setOGTypeArticle,
+	canonical,
+	alternates,
 } = Astro.props;
 
 // Apply a class to the body element to decide the height of the banner.
@@ -88,6 +93,9 @@ if (!lang) {
 }
 
 const siteLang = lang.replace("_", "-");
+const canonicalUrl = canonical
+	? new URL(canonical, Astro.site)
+	: new URL(Astro.url.pathname, Astro.site);
 
 const bannerOffsetByPosition = {
 	top: `${BANNER_HEIGHT_EXTEND}vh`,
@@ -115,6 +123,23 @@ const bannerOffset =
 			name="description"
 			content={description || pageTitle}
 		/>
+		<link
+			rel="canonical"
+			href={canonicalUrl}
+		/>
+
+		{
+			Object.entries(alternates ?? {}).map(
+				([language, href]) => (
+					<link
+						rel="alternate"
+						hreflang={language}
+						href={href}
+					/>
+				),
+			)
+		}
+
 		<meta
 			name="author"
 			content={profileConfig.name}
@@ -124,7 +149,7 @@ const bannerOffset =
 			property="og:site_name"
 			content={siteConfig.title}
 		/>
-		<meta property="og:url" content={Astro.url} />
+		<meta property="og:url" content={canonicalUrl} />
 		<meta property="og:title" content={pageTitle} />
 		<meta
 			property="og:description"

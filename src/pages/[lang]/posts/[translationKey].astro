@@ -9,7 +9,7 @@ import { getSortedPosts } from "@utils/content-utils";
 import { getDir } from "@utils/url-utils";
 import { getLocalizedPath } from "@utils/navigation-utils";
 import { Icon } from "astro-icon/components";
-import { licenseConfig } from "src/config";
+import { licenseConfig } from "@/config";
 import ImageWrapper from "../../../components/misc/ImageWrapper.astro";
 import PostMetadata from "../../../components/PostMeta.astro";
 import { profileConfig } from "../../../config";
@@ -60,6 +60,27 @@ export async function getStaticPaths() {
 const { entry, translationKey } = Astro.props;
 
 const currentLang = normalizeSiteLang(Astro.params.lang);
+const canonical = new URL(
+	`/${currentLang}/posts/${translationKey}/`,
+	Astro.site,
+).toString();
+
+const alternates = {
+	en: new URL(
+		`/en/posts/${translationKey}/`,
+		Astro.site,
+	).toString(),
+
+	zh: new URL(
+		`/zh/posts/${translationKey}/`,
+		Astro.site,
+	).toString(),
+
+	"x-default": new URL(
+		`/en/posts/${translationKey}/`,
+		Astro.site,
+	).toString(),
+};
 function getTranslationKeyFromSlug(
 	slug: string,
 ): string | null {
@@ -125,6 +146,8 @@ const jsonLd = {
 	lang={currentLang}
 	setOGTypeArticle={true}
 	headings={headings}
+	canonical={canonical}
+	alternates={alternates}
 >
 	<script
 		is:inline

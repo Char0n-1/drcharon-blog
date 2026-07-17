@@ -1,0 +1,155 @@
+---
+import MainGridLayout from "../layouts/MainGridLayout.astro";
+import { getLocalizedPath } from "../utils/navigation-utils";
+import type { SiteLang } from "../utils/locale-utils";
+
+const lang: SiteLang = "en";
+
+const homeUrl = getLocalizedPath(lang, "/");
+
+const pageTitle = "Page Not Found";
+const pageDescription =
+	"The page you are looking for does not exist or may have been moved.";
+---
+
+<MainGridLayout
+	title={pageTitle}
+	description={pageDescription}
+	siteLang={lang}
+>
+	<div
+		class="flex w-full rounded-[var(--radius-large)] overflow-hidden relative min-h-64"
+	>
+		<div
+			class="card-base z-10 px-6 md:px-9 py-10 relative w-full flex flex-col items-center justify-center text-center"
+		>
+			<div
+				class="text-7xl md:text-8xl font-bold text-[var(--primary)] mb-4"
+			>
+				404
+			</div>
+
+			<h1
+				id="not-found-title"
+				class="text-2xl md:text-3xl font-bold text-black/90 dark:text-white/90 mb-3"
+			>
+				{pageTitle}
+			</h1>
+
+			<p
+				id="not-found-description"
+				class="max-w-lg text-black/60 dark:text-white/60 mb-7"
+			>
+				{pageDescription}
+			</p>
+
+			<a
+				id="not-found-home"
+				href={homeUrl}
+				class="btn-card rounded-xl px-5 py-3 font-medium text-black/75 dark:text-white/75 active:scale-95"
+			>
+				Back to Home
+			</a>
+		</div>
+	</div>
+
+	<script is:inline>
+		const pathMatch =
+			window.location.pathname.match(
+				/^\/(en|zh)(?:\/|$)/,
+			);
+
+		const pathLanguage =
+			pathMatch?.[1];
+
+		const preferredLanguage =
+			localStorage.getItem(
+				"preferred-language",
+			);
+
+		const browserLanguage =
+			navigator.language
+				.toLowerCase()
+				.startsWith("zh")
+				? "zh"
+				: "en";
+
+		const language =
+			pathLanguage === "en" ||
+			pathLanguage === "zh"
+				? pathLanguage
+				: preferredLanguage === "en" ||
+					  preferredLanguage === "zh"
+					? preferredLanguage
+					: browserLanguage;
+
+		const title =
+			document.getElementById(
+				"not-found-title",
+			);
+
+		const description =
+			document.getElementById(
+				"not-found-description",
+			);
+
+		const homeLink =
+			document.getElementById(
+				"not-found-home",
+			);
+
+		if (language === "zh") {
+			if (title) {
+				title.textContent =
+					"页面不存在";
+			}
+
+			if (description) {
+				description.textContent =
+					"你访问的页面不存在，或者已经被移动。";
+			}
+
+			if (
+				homeLink instanceof
+				HTMLAnchorElement
+			) {
+				homeLink.textContent =
+					"返回首页";
+
+				homeLink.href = "/zh/";
+			}
+
+			document.documentElement.lang =
+				"zh";
+
+			document.title =
+				"页面不存在 - Dr. Charon";
+		} else {
+			if (title) {
+				title.textContent =
+					"Page Not Found";
+			}
+
+			if (description) {
+				description.textContent =
+					"The page you are looking for does not exist or may have been moved.";
+			}
+
+			if (
+				homeLink instanceof
+				HTMLAnchorElement
+			) {
+				homeLink.textContent =
+					"Back to Home";
+
+				homeLink.href = "/en/";
+			}
+
+			document.documentElement.lang =
+				"en";
+
+			document.title =
+				"Page Not Found - Dr. Charon";
+		}
+	</script>
+</MainGridLayout>
