@@ -11,8 +11,8 @@ tags:
   - Kerberos
   - Windows-Hello
 category: Infrastructure
-lang: en
-draft: true
+lang: zh
+draft: false
 ---
 
 最近在部署 Windows Hello for Business 的时候，踩了一个非常大的坑。 整个过程持续了两天，最后发现并不是某一个配置出了问题，而是几个历史遗留问题叠加在一起，导致整个认证链全部失效。 这篇文章记录一下整个排障过程，也希望以后自己再遇到类似问题的时候，不用重新踩一遍。
@@ -42,7 +42,7 @@ Windows 11 已经完成 Hybrid Join，也已经自动加入 Intune。
 >
 > **请使用其他方式登录。**
 
-![[Pasted image 20260717110121.png]]
+![](Pasted%20image%2020260717110121.png)
 
 （英文对应为：**That option is temporarily unavailable. For now, please use a different sign-in method.**）
 
@@ -142,8 +142,9 @@ Windows Hello for Business 在 Intune 里面其实有两个容易混淆的配置
 第一个是：
 
 > **Devices → Windows → Enrollment → Windows Hello for Business**
+![](Pasted%20image%2020260717112051.png)
 
-![[Pasted image 20260717112051.png]]
+
 这里属于 **Enrollment** 配置。
 
 它决定的是设备是否启用 Windows Hello，一些简单的配置
@@ -152,7 +153,7 @@ Windows Hello for Business 在 Intune 里面其实有两个容易混淆的配置
 
 > **Devices → Windows → Configuration → Policies**
 
-![[Pasted image 20260717112035.png]]
+![](Pasted%20image%2020260717112035.png)
 这里属于 **Configuration Profile**。
 
 它的作用是向设备下发具体配置，例如 PIN 复杂度、生物识别、TPM 要求，以及其他 Windows 设置，以及使用哪一种部署模式，例如 Cloud Trust、Key Trust 或 Certificate Trust。可以把它理解成 Windows Hello 的"全局策略"。
@@ -178,7 +179,7 @@ Windows Hello for Business 在 Intune 里面其实有两个容易混淆的配置
 > **先让用户能够正常使用 PIN 登录。**
 
 于是，我决定暂时关闭 Cloud Trust，先回到目前环境更容易验证的 Key Trust 部署方式。
-![[Pasted image 20260717112153.png]]
+![](Pasted%20image%2020260717112153.png)
 
 调整策略之后，再次查看设备状态：
 
