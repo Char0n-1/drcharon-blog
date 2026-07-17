@@ -53,19 +53,39 @@ const mainPanelTop = siteConfig.banner.enable
 
 <!-- Navbar -->
 <slot slot="head" name="head"></slot>
-<div id="top-row" class="z-50 pointer-events-none relative transition-all duration-700 max-w-[var(--page-width)] px-0 md:px-4 mx-auto" class:list={[""]}>
-    <div id="navbar-wrapper" class="pointer-events-auto sticky top-0 transition-all">
-        <Navbar siteLang={siteLang} />
+
+<div
+	id="top-row"
+	class="z-50 pointer-events-none relative transition-all duration-700 max-w-[var(--page-width)] px-0 md:px-4 mx-auto"
+>
+	<div
+		id="navbar-wrapper"
+		class="pointer-events-auto sticky top-0 transition-all"
+	>
+		<Navbar siteLang={siteLang} />
+	</div>
 </div>
 
 <!-- Banner -->
-{siteConfig.banner.enable && <div id="banner-wrapper" class={`absolute z-10 w-full transition duration-700 overflow-hidden`} style={`top: -${BANNER_HEIGHT_EXTEND}vh`}>
-    <ImageWrapper id="banner" alt="Banner image of the blog" class:list={["object-cover h-full transition duration-700 opacity-0 scale-105"]}
-                  src={siteConfig.banner.src} position={siteConfig.banner.position}
-    >
-    </ImageWrapper>
-</div>}
-
+{
+	siteConfig.banner.enable && (
+		<div
+			id="banner-wrapper"
+			class="absolute z-10 w-full transition duration-700 overflow-hidden"
+			style={`top: -${BANNER_HEIGHT_EXTEND}vh`}
+		>
+			<ImageWrapper
+				id="banner"
+				alt="Banner image of the blog"
+				class:list={[
+					"object-cover h-full transition duration-700 opacity-0 scale-105",
+				]}
+				src={siteConfig.banner.src}
+				position={siteConfig.banner.position}
+			/>
+		</div>
+	)
+}
 <!-- Main content -->
 <div class="absolute w-full z-30 pointer-events-none" style={`top: ${mainPanelTop}`}>
     <!-- The pointer-events-none here prevent blocking the click event of the TOC -->
