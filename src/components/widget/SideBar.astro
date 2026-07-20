@@ -11,10 +11,7 @@ interface Props {
 	siteLang?: SiteLang;
 }
 
-const {
-	class: className,
-	siteLang,
-} = Astro.props;
+const { class: className, siteLang } = Astro.props;
 ---
 
 <div id="sidebar" class:list={[className, "w-full"]}>

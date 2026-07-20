@@ -48,25 +48,16 @@ let {
 // Swup can update the body for each page visit, but it happens after the
 // page transition, causing a delay in the banner height change. Swup hooks
 // are used later to change the height immediately when a link is clicked.
-const pathWithoutLocale = stripLocaleFromPath(
-	Astro.url.pathname,
-);
+const pathWithoutLocale = stripLocaleFromPath(Astro.url.pathname);
 
-const isHomePage = pathsEqual(
-	pathWithoutLocale,
-	url("/"),
-);
+const isHomePage = pathsEqual(pathWithoutLocale, url("/"));
 
 // Defines global CSS variables.
 // Why this is done in Layout instead of GlobalStyles:
 // https://github.com/withastro/astro/issues/6728#issuecomment-1502203757
 const configHue = siteConfig.themeColor.hue;
 
-if (
-	!banner ||
-	typeof banner !== "string" ||
-	banner.trim() === ""
-) {
+if (!banner || typeof banner !== "string" || banner.trim() === "") {
 	banner = siteConfig.banner.src;
 }
 
@@ -84,9 +75,7 @@ if (title) {
 }
 
 const favicons: Favicon[] =
-	siteConfig.favicon.length > 0
-		? siteConfig.favicon
-		: defaultFavicons;
+	siteConfig.favicon.length > 0 ? siteConfig.favicon : defaultFavicons;
 
 if (!lang) {
 	lang = `${siteConfig.lang}`;
@@ -104,9 +93,7 @@ const bannerOffsetByPosition = {
 };
 
 const bannerOffset =
-	bannerOffsetByPosition[
-		siteConfig.banner.position || "center"
-	];
+	bannerOffsetByPosition[siteConfig.banner.position || "center"];
 ---
 
 <!DOCTYPE html>

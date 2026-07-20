@@ -1,115 +1,97 @@
 <script lang="ts">
-	import { onMount } from "svelte";
+import { onMount } from "svelte";
 
-	import I18nKey from "../i18n/i18nKey";
-	import { i18nFor } from "../i18n/translation";
-	import type { PostForList } from "../utils/content-utils";
-	import type { SiteLang } from "../utils/locale-utils";
+import I18nKey from "../i18n/i18nKey";
+import { i18nFor } from "../i18n/translation";
+import type { PostForList } from "../utils/content-utils";
+import type { SiteLang } from "../utils/locale-utils";
 
-	export let siteLang: SiteLang;
-	export let tags: string[] = [];
-	export let categories: string[] = [];
-	export let sortedPosts: ArchivePost[] = [];
+export let siteLang: SiteLang;
+export let tags: string[] = [];
+export let categories: string[] = [];
+export let sortedPosts: ArchivePost[] = [];
 
-	type ArchivePost = PostForList & {
-		url: string;
-	};
+type ArchivePost = PostForList & {
+	url: string;
+};
 
-	interface Group {
-		year: number;
-		posts: ArchivePost[];
-	}
+interface Group {
+	year: number;
+	posts: ArchivePost[];
+}
 
-	let groups: Group[] = [];
+let groups: Group[] = [];
 
-	function formatDate(date: Date): string {
-		const month = (date.getMonth() + 1)
-			.toString()
-			.padStart(2, "0");
+function formatDate(date: Date): string {
+	const month = (date.getMonth() + 1).toString().padStart(2, "0");
 
-		const day = date
-			.getDate()
-			.toString()
-			.padStart(2, "0");
+	const day = date.getDate().toString().padStart(2, "0");
 
-		return `${month}-${day}`;
-	}
+	return `${month}-${day}`;
+}
 
-	function formatTag(tagList: string[]): string {
-		return tagList.map((tag) => `#${tag}`).join(" ");
-	}
+function formatTag(tagList: string[]): string {
+	return tagList.map((tag) => `#${tag}`).join(" ");
+}
 
-	onMount(() => {
-		const params = new URLSearchParams(
-			window.location.search,
+onMount(() => {
+	const params = new URLSearchParams(window.location.search);
+
+	tags = params.getAll("tag");
+	categories = params.getAll("category");
+
+	const showUncategorized = params.get("uncategorized") === "true";
+
+	let filteredPosts = sortedPosts;
+
+	if (tags.length > 0) {
+		filteredPosts = filteredPosts.filter(
+			(post) =>
+				Array.isArray(post.data.tags) &&
+				post.data.tags.some((tag) => tags.includes(tag)),
 		);
+	}
 
-		tags = params.getAll("tag");
-		categories = params.getAll("category");
-
-		const showUncategorized =
-			params.get("uncategorized") === "true";
-
-		let filteredPosts = sortedPosts;
-
-		if (tags.length > 0) {
-			filteredPosts = filteredPosts.filter(
-				(post) =>
-					Array.isArray(post.data.tags) &&
-					post.data.tags.some((tag) =>
-						tags.includes(tag),
-					),
-			);
-		}
-
-		if (categories.length > 0) {
-			filteredPosts = filteredPosts.filter(
-				(post) =>
-					typeof post.data.category === "string" &&
-					categories.includes(
-						post.data.category.trim(),
-					),
-			);
-		}
-
-		if (showUncategorized) {
-			filteredPosts = filteredPosts.filter(
-				(post) =>
-					!post.data.category ||
-					post.data.category.trim() === "",
-			);
-		}
-
-		const grouped = filteredPosts.reduce(
-			(acc, post) => {
-				const year =
-					post.data.published.getFullYear();
-
-				if (!acc[year]) {
-					acc[year] = [];
-				}
-
-				acc[year].push(post);
-
-				return acc;
-			},
-			{} as Record<number, ArchivePost[]>,
+	if (categories.length > 0) {
+		filteredPosts = filteredPosts.filter(
+			(post) =>
+				typeof post.data.category === "string" &&
+				categories.includes(post.data.category.trim()),
 		);
+	}
 
-		groups = Object.keys(grouped)
-			.map((yearString) => {
-				const year = Number.parseInt(
-					yearString,
-					10,
-				);
+	if (showUncategorized) {
+		filteredPosts = filteredPosts.filter(
+			(post) => !post.data.category || post.data.category.trim() === "",
+		);
+	}
 
-				return {
-					year,
-					posts: grouped[year],
-				};
-			})
-			.sort((a, b) => b.year - a.year);
-	});
+	const grouped = filteredPosts.reduce(
+		(acc, post) => {
+			const year = post.data.published.getFullYear();
+
+			if (!acc[year]) {
+				acc[year] = [];
+			}
+
+			acc[year].push(post);
+
+			return acc;
+		},
+		{} as Record<number, ArchivePost[]>,
+	);
+
+	groups = Object.keys(grouped)
+		.map((yearString) => {
+			const year = Number.parseInt(yearString, 10);
+
+			return {
+				year,
+				posts: grouped[year],
+			};
+		})
+		.sort((a, b) => b.year - a.year);
+});
 </script>
 
 <div class="card-base px-8 py-6">

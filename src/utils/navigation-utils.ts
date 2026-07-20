@@ -1,26 +1,17 @@
 import type { SiteLang } from "./locale-utils";
 
-export function getLocalizedPath(
-    lang: SiteLang,
-    path: string,
-): string {
-    const normalized =
-        path.startsWith("/") ? path : `/${path}`;
+export function getLocalizedPath(lang: SiteLang, path: string): string {
+	const normalized = path.startsWith("/") ? path : `/${path}`;
 
-    if (normalized === "/") {
-        return `/${lang}/`;
-    }
+	if (normalized === "/") {
+		return `/${lang}/`;
+	}
 
-    return `/${lang}${normalized}`;
+	return `/${lang}${normalized}`;
 }
 
-export function stripLocaleFromPath(
-    pathname: string,
-): string {
-    const stripped = pathname.replace(
-        /^\/(?:en|zh)(?=\/|$)/,
-        "",
-    );
+export function stripLocaleFromPath(pathname: string): string {
+	const stripped = pathname.replace(/^\/(?:en|zh)(?=\/|$)/, "");
 
-    return stripped === "" ? "/" : stripped;
+	return stripped === "" ? "/" : stripped;
 }

@@ -12,11 +12,7 @@ interface Props {
 	siteLang?: SiteLang;
 }
 
-const {
-	class: className,
-	style,
-	siteLang,
-} = Astro.props;
+const { class: className, style, siteLang } = Astro.props;
 
 const categories = await getCategoryList(siteLang);
 

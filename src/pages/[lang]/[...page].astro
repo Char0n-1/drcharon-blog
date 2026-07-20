@@ -5,26 +5,23 @@ import PostPage from "../../components/PostPage.astro";
 import { PAGE_SIZE } from "../../constants/constants";
 import MainGridLayout from "../../layouts/MainGridLayout.astro";
 import { getSortedPosts } from "../../utils/content-utils";
-import {
-	normalizeSiteLang,
-	SITE_LANGUAGES,
-} from "../../utils/locale-utils";
+import { normalizeSiteLang, SITE_LANGUAGES } from "../../utils/locale-utils";
 
 export const getStaticPaths = (async ({ paginate }) => {
-const allBlogPosts = await getSortedPosts();
+	const allBlogPosts = await getSortedPosts();
 
-return SITE_LANGUAGES.flatMap((lang) => {
-	const localizedPosts = allBlogPosts.filter(
-		(entry) => entry.data.lang === lang,
-	);
+	return SITE_LANGUAGES.flatMap((lang) => {
+		const localizedPosts = allBlogPosts.filter(
+			(entry) => entry.data.lang === lang,
+		);
 
-	return paginate(localizedPosts, {
-		pageSize: PAGE_SIZE,
-		params: {
-			lang,
-		},
+		return paginate(localizedPosts, {
+			pageSize: PAGE_SIZE,
+			params: {
+				lang,
+			},
+		});
 	});
-});
 }) satisfies GetStaticPaths;
 
 const { page } = Astro.props;

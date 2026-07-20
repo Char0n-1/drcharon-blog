@@ -2,10 +2,7 @@ import { type CollectionEntry, getCollection } from "astro:content";
 import I18nKey from "@i18n/i18nKey";
 import { i18n, i18nFor } from "@i18n/translation";
 import type { SiteLang } from "./locale-utils";
-import {
-	getCategoryUrl,
-	getLocalizedCategoryUrl,
-} from "@utils/url-utils.ts";
+import { getCategoryUrl, getLocalizedCategoryUrl } from "@utils/url-utils.ts";
 
 // // Retrieve posts and sort them by publication date
 async function getRawSortedPosts() {
@@ -39,10 +36,7 @@ export async function getSortedPosts() {
 	 * Generate previous and next navigation independently
 	 * for each site language.
 	 */
-	const postsByLanguage = new Map<
-		string,
-		typeof sorted
-	>();
+	const postsByLanguage = new Map<string, typeof sorted>();
 
 	for (const post of sorted) {
 		const language = post.data.lang;
@@ -56,19 +50,15 @@ export async function getSortedPosts() {
 
 	for (const localizedPosts of postsByLanguage.values()) {
 		for (let i = 1; i < localizedPosts.length; i++) {
-			localizedPosts[i].data.nextSlug =
-				localizedPosts[i - 1].slug;
+			localizedPosts[i].data.nextSlug = localizedPosts[i - 1].slug;
 
-			localizedPosts[i].data.nextTitle =
-				localizedPosts[i - 1].data.title;
+			localizedPosts[i].data.nextTitle = localizedPosts[i - 1].data.title;
 		}
 
 		for (let i = 0; i < localizedPosts.length - 1; i++) {
-			localizedPosts[i].data.prevSlug =
-				localizedPosts[i + 1].slug;
+			localizedPosts[i].data.prevSlug = localizedPosts[i + 1].slug;
 
-			localizedPosts[i].data.prevTitle =
-				localizedPosts[i + 1].data.title;
+			localizedPosts[i].data.prevTitle = localizedPosts[i + 1].data.title;
 		}
 	}
 
@@ -94,16 +84,11 @@ export type Tag = {
 	count: number;
 };
 
-export async function getTagList(
-	siteLang?: SiteLang,
-): Promise<Tag[]> {
+export async function getTagList(siteLang?: SiteLang): Promise<Tag[]> {
 	const allBlogPosts = await getCollection<"posts">("posts", ({ data }) => {
-		const isPublished = import.meta.env.PROD
-			? data.draft !== true
-			: true;
+		const isPublished = import.meta.env.PROD ? data.draft !== true : true;
 
-		const isCorrectLanguage =
-			!siteLang || data.lang === siteLang;
+		const isCorrectLanguage = !siteLang || data.lang === siteLang;
 
 		return isPublished && isCorrectLanguage;
 	});
@@ -142,12 +127,9 @@ export async function getCategoryList(
 	siteLang?: SiteLang,
 ): Promise<Category[]> {
 	const allBlogPosts = await getCollection<"posts">("posts", ({ data }) => {
-		const isPublished = import.meta.env.PROD
-			? data.draft !== true
-			: true;
+		const isPublished = import.meta.env.PROD ? data.draft !== true : true;
 
-		const isCorrectLanguage =
-			!siteLang || data.lang === siteLang;
+		const isCorrectLanguage = !siteLang || data.lang === siteLang;
 
 		return isPublished && isCorrectLanguage;
 	});
@@ -160,16 +142,14 @@ export async function getCategoryList(
 				? i18nFor(siteLang, I18nKey.uncategorized)
 				: i18n(I18nKey.uncategorized);
 
-			count[uncategorizedName] =
-				(count[uncategorizedName] ?? 0) + 1;
+			count[uncategorizedName] = (count[uncategorizedName] ?? 0) + 1;
 
 			return;
 		}
 
 		const categoryName = String(post.data.category).trim();
 
-		count[categoryName] =
-			(count[categoryName] ?? 0) + 1;
+		count[categoryName] = (count[categoryName] ?? 0) + 1;
 	});
 
 	const categories = Object.keys(count).sort((a, b) =>

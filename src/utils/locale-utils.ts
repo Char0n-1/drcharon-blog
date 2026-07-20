@@ -6,14 +6,11 @@ export const DEFAULT_LANGUAGE: SiteLang = "en";
 
 export function isSiteLang(value: string | undefined): value is SiteLang {
 	return (
-		typeof value === "string" &&
-		SITE_LANGUAGES.includes(value as SiteLang)
+		typeof value === "string" && SITE_LANGUAGES.includes(value as SiteLang)
 	);
 }
 
-export function normalizeSiteLang(
-	value: string | undefined,
-): SiteLang {
+export function normalizeSiteLang(value: string | undefined): SiteLang {
 	if (isSiteLang(value)) {
 		return value;
 	}

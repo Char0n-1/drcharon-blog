@@ -4,10 +4,7 @@ import Markdown from "@components/misc/Markdown.astro";
 import I18nKey from "../../i18n/i18nKey";
 import { i18nFor } from "../../i18n/translation";
 import MainGridLayout from "../../layouts/MainGridLayout.astro";
-import {
-	normalizeSiteLang,
-	SITE_LANGUAGES,
-} from "../../utils/locale-utils";
+import { normalizeSiteLang, SITE_LANGUAGES } from "../../utils/locale-utils";
 
 export function getStaticPaths() {
 	return SITE_LANGUAGES.map((lang) => ({
@@ -19,15 +16,10 @@ export function getStaticPaths() {
 
 const lang = normalizeSiteLang(Astro.params.lang);
 
-const aboutPost = await getEntry(
-	"spec",
-	`about/${lang}`,
-);
+const aboutPost = await getEntry("spec", `about/${lang}`);
 
 if (!aboutPost) {
-	throw new Error(
-		`About page content not found for language: ${lang}`,
-	);
+	throw new Error(`About page content not found for language: ${lang}`);
 }
 
 const { Content } = await render(aboutPost);

@@ -16,7 +16,6 @@ function joinUrl(...parts: string[]): string {
 	return joined.replace(/\/+/g, "/");
 }
 
-
 export function getTagUrl(tag: string): string {
 	if (!tag) {
 		return url("/archive/");
@@ -25,10 +24,7 @@ export function getTagUrl(tag: string): string {
 	return url(`/archive/?tag=${encodeURIComponent(tag.trim())}`);
 }
 
-export function getLocalizedTagUrl(
-	lang: SiteLang,
-	tag: string,
-): string {
+export function getLocalizedTagUrl(lang: SiteLang, tag: string): string {
 	if (!tag) {
 		return getLocalizedPath(lang, "/archive/");
 	}
@@ -43,15 +39,12 @@ export function getCategoryUrl(category: string | null): string {
 	if (
 		!category ||
 		category.trim() === "" ||
-		category.trim().toLowerCase() ===
-			i18n(I18nKey.uncategorized).toLowerCase()
+		category.trim().toLowerCase() === i18n(I18nKey.uncategorized).toLowerCase()
 	) {
 		return url("/archive/?uncategorized=true");
 	}
 
-	return url(
-		`/archive/?category=${encodeURIComponent(category.trim())}`,
-	);
+	return url(`/archive/?category=${encodeURIComponent(category.trim())}`);
 }
 
 export function getLocalizedCategoryUrl(
@@ -64,10 +57,7 @@ export function getLocalizedCategoryUrl(
 		category.trim().toLowerCase() ===
 			i18nFor(lang, I18nKey.uncategorized).toLowerCase()
 	) {
-		return getLocalizedPath(
-			lang,
-			"/archive/?uncategorized=true",
-		);
+		return getLocalizedPath(lang, "/archive/?uncategorized=true");
 	}
 
 	return getLocalizedPath(

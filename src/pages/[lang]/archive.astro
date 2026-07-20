@@ -26,16 +26,11 @@ const sortedPostsList = allPosts
 	.map((post) => {
 		const slugParts = post.slug.split("/");
 		const translationKey =
-			slugParts.length > 1
-				? slugParts.slice(0, -1).join("/")
-				: post.slug;
+			slugParts.length > 1 ? slugParts.slice(0, -1).join("/") : post.slug;
 
 		return {
 			...post,
-			url: getLocalizedPath(
-				siteLang as SiteLang,
-				`/posts/${translationKey}/`,
-			),
+			url: getLocalizedPath(siteLang as SiteLang, `/posts/${translationKey}/`),
 		};
 	});
 ---

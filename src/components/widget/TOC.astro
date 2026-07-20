@@ -17,13 +17,9 @@ for (const heading of headings) {
 }
 
 const className = Astro.props.class;
-const pathWithoutLocale = stripLocaleFromPath(
-	Astro.url.pathname,
-);
+const pathWithoutLocale = stripLocaleFromPath(Astro.url.pathname);
 
-const isPostsRoute = pathWithoutLocale.startsWith(
-	url("/posts/"),
-);
+const isPostsRoute = pathWithoutLocale.startsWith(url("/posts/"));
 
 const removeTailingHash = (text: string) => {
 	let lastIndexOfHash = text.lastIndexOf("#");

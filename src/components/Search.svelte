@@ -1,228 +1,192 @@
 <script lang="ts">
-	import type { SearchResult } from "@/global";
-	import Icon from "@iconify/svelte";
-	import I18nKey from "@i18n/i18nKey";
-	import { i18nFor } from "@i18n/translation";
-	import type { SiteLang } from "@utils/locale-utils";
-	import { url } from "@utils/url-utils.ts";
-	import { onMount } from "svelte";
+import type { SearchResult } from "@/global";
+import Icon from "@iconify/svelte";
+import I18nKey from "@i18n/i18nKey";
+import { i18nFor } from "@i18n/translation";
+import type { SiteLang } from "@utils/locale-utils";
+import { url } from "@utils/url-utils.ts";
+import { onMount } from "svelte";
 
-	export let siteLang: SiteLang = "en";
+export let siteLang: SiteLang = "en";
 
-	let keywordDesktop = "";
-	let keywordMobile = "";
-	let result: SearchResult[] = [];
-	let isSearching = false;
-	let pagefindLoaded = false;
-	let initialized = false;
+let keywordDesktop = "";
+let keywordMobile = "";
+let result: SearchResult[] = [];
+let isSearching = false;
+let pagefindLoaded = false;
+let initialized = false;
 
-	function getLocalizedHomeUrl(): string {
-		return url(`/${siteLang}/`);
+function getLocalizedHomeUrl(): string {
+	return url(`/${siteLang}/`);
+}
+
+function getFakeResults(): SearchResult[] {
+	return [
+		{
+			url: getLocalizedHomeUrl(),
+			meta: {
+				title: "This Is a Fake Search Result",
+			},
+			excerpt:
+				"Because the search cannot work in the <mark>dev</mark> environment.",
+		},
+		{
+			url: getLocalizedHomeUrl(),
+			meta: {
+				title: "If You Want to Test the Search",
+			},
+			excerpt: "Try running <mark>pnpm build && pnpm preview</mark> instead.",
+		},
+	];
+}
+
+function isCurrentLanguageResult(resultUrl: string): boolean {
+	try {
+		const resultPath = new URL(resultUrl, window.location.origin).pathname;
+
+		const localizedRootPath = new URL(
+			getLocalizedHomeUrl(),
+			window.location.origin,
+		).pathname;
+
+		return (
+			resultPath === localizedRootPath ||
+			resultPath.startsWith(localizedRootPath)
+		);
+	} catch {
+		return false;
+	}
+}
+
+const togglePanel = () => {
+	const panel = document.getElementById("search-panel");
+
+	panel?.classList.toggle("float-panel-closed");
+};
+
+const setPanelVisibility = (show: boolean, isDesktop: boolean): void => {
+	const panel = document.getElementById("search-panel");
+
+	if (!panel || !isDesktop) {
+		return;
 	}
 
-	function getFakeResults(): SearchResult[] {
-		return [
-			{
-				url: getLocalizedHomeUrl(),
-				meta: {
-					title: "This Is a Fake Search Result",
-				},
-				excerpt:
-					"Because the search cannot work in the <mark>dev</mark> environment.",
-			},
-			{
-				url: getLocalizedHomeUrl(),
-				meta: {
-					title: "If You Want to Test the Search",
-				},
-				excerpt:
-					"Try running <mark>pnpm build && pnpm preview</mark> instead.",
-			},
-		];
+	if (show) {
+		panel.classList.remove("float-panel-closed");
+	} else {
+		panel.classList.add("float-panel-closed");
+	}
+};
+
+const search = async (keyword: string, isDesktop: boolean): Promise<void> => {
+	if (!keyword) {
+		setPanelVisibility(false, isDesktop);
+		result = [];
+		return;
 	}
 
-	function isCurrentLanguageResult(resultUrl: string): boolean {
-		try {
-			const resultPath = new URL(
-				resultUrl,
-				window.location.origin,
-			).pathname;
+	if (!initialized) {
+		return;
+	}
 
-			const localizedRootPath = new URL(
-				getLocalizedHomeUrl(),
-				window.location.origin,
-			).pathname;
+	isSearching = true;
 
-			return (
-				resultPath === localizedRootPath ||
-				resultPath.startsWith(localizedRootPath)
+	try {
+		let searchResults: SearchResult[] = [];
+
+		if (import.meta.env.PROD && pagefindLoaded && window.pagefind) {
+			const response = await window.pagefind.search(keyword);
+
+			const allResults = await Promise.all(
+				response.results.map((item) => item.data()),
 			);
-		} catch {
-			return false;
-		}
-	}
 
-	const togglePanel = () => {
-		const panel = document.getElementById("search-panel");
-
-		panel?.classList.toggle("float-panel-closed");
-	};
-
-	const setPanelVisibility = (
-		show: boolean,
-		isDesktop: boolean,
-	): void => {
-		const panel = document.getElementById("search-panel");
-
-		if (!panel || !isDesktop) {
-			return;
-		}
-
-		if (show) {
-			panel.classList.remove("float-panel-closed");
+			searchResults = allResults.filter((item) =>
+				isCurrentLanguageResult(item.url),
+			);
+		} else if (import.meta.env.DEV) {
+			searchResults = getFakeResults();
 		} else {
-			panel.classList.add("float-panel-closed");
+			searchResults = [];
+
+			console.error("Pagefind is not available in production environment.");
+		}
+
+		result = searchResults;
+
+		setPanelVisibility(result.length > 0, isDesktop);
+	} catch (error) {
+		console.error("Search error:", error);
+
+		result = [];
+		setPanelVisibility(false, isDesktop);
+	} finally {
+		isSearching = false;
+	}
+};
+
+onMount(() => {
+	const initializeSearch = () => {
+		initialized = true;
+
+		pagefindLoaded =
+			typeof window !== "undefined" &&
+			!!window.pagefind &&
+			typeof window.pagefind.search === "function";
+
+		console.log("Pagefind status on init:", pagefindLoaded);
+
+		if (keywordDesktop) {
+			search(keywordDesktop, true);
+		}
+
+		if (keywordMobile) {
+			search(keywordMobile, false);
 		}
 	};
 
-	const search = async (
-		keyword: string,
-		isDesktop: boolean,
-	): Promise<void> => {
-		if (!keyword) {
-			setPanelVisibility(false, isDesktop);
-			result = [];
-			return;
-		}
+	if (import.meta.env.DEV) {
+		console.log(
+			"Pagefind is not available in development mode. Using mock data.",
+		);
 
-		if (!initialized) {
-			return;
-		}
+		initializeSearch();
+	} else {
+		document.addEventListener("pagefindready", () => {
+			console.log("Pagefind ready event received.");
 
-		isSearching = true;
+			initializeSearch();
+		});
 
-		try {
-			let searchResults: SearchResult[] = [];
-
-			if (
-				import.meta.env.PROD &&
-				pagefindLoaded &&
-				window.pagefind
-			) {
-				const response =
-					await window.pagefind.search(keyword);
-
-				const allResults = await Promise.all(
-					response.results.map((item) =>
-						item.data(),
-					),
-				);
-
-				searchResults = allResults.filter((item) =>
-					isCurrentLanguageResult(item.url),
-				);
-			} else if (import.meta.env.DEV) {
-				searchResults = getFakeResults();
-			} else {
-				searchResults = [];
-
-				console.error(
-					"Pagefind is not available in production environment.",
-				);
-			}
-
-			result = searchResults;
-
-			setPanelVisibility(
-				result.length > 0,
-				isDesktop,
-			);
-		} catch (error) {
-			console.error("Search error:", error);
-
-			result = [];
-			setPanelVisibility(false, isDesktop);
-		} finally {
-			isSearching = false;
-		}
-	};
-
-	onMount(() => {
-		const initializeSearch = () => {
-			initialized = true;
-
-			pagefindLoaded =
-				typeof window !== "undefined" &&
-				!!window.pagefind &&
-				typeof window.pagefind.search ===
-					"function";
-
-			console.log(
-				"Pagefind status on init:",
-				pagefindLoaded,
-			);
-
-			if (keywordDesktop) {
-				search(keywordDesktop, true);
-			}
-
-			if (keywordMobile) {
-				search(keywordMobile, false);
-			}
-		};
-
-		if (import.meta.env.DEV) {
-			console.log(
-				"Pagefind is not available in development mode. Using mock data.",
+		document.addEventListener("pagefindloaderror", () => {
+			console.warn(
+				"Pagefind load error event received. Search functionality will be limited.",
 			);
 
 			initializeSearch();
-		} else {
-			document.addEventListener(
-				"pagefindready",
-				() => {
-					console.log(
-						"Pagefind ready event received.",
-					);
+		});
 
-					initializeSearch();
-				},
-			);
+		setTimeout(() => {
+			if (!initialized) {
+				console.log("Fallback: Initializing search after timeout.");
 
-			document.addEventListener(
-				"pagefindloaderror",
-				() => {
-					console.warn(
-						"Pagefind load error event received. Search functionality will be limited.",
-					);
-
-					initializeSearch();
-				},
-			);
-
-			setTimeout(() => {
-				if (!initialized) {
-					console.log(
-						"Fallback: Initializing search after timeout.",
-					);
-
-					initializeSearch();
-				}
-			}, 2000);
-		}
-	});
-
-	$: if (initialized && keywordDesktop) {
-		(async () => {
-			await search(keywordDesktop, true);
-		})();
+				initializeSearch();
+			}
+		}, 2000);
 	}
+});
 
-	$: if (initialized && keywordMobile) {
-		(async () => {
-			await search(keywordMobile, false);
-		})();
-	}
+$: if (initialized && keywordDesktop) {
+	(async () => {
+		await search(keywordDesktop, true);
+	})();
+}
+
+$: if (initialized && keywordMobile) {
+	(async () => {
+		await search(keywordMobile, false);
+	})();
+}
 </script>
 
 <!-- Search bar for desktop view -->

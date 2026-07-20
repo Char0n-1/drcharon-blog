@@ -1,9 +1,6 @@
 ---
 import { siteConfig } from "../config";
-import {
-	isSiteLang,
-	type SiteLang,
-} from "../utils/locale-utils";
+import { isSiteLang, type SiteLang } from "../utils/locale-utils";
 import { stripLocaleFromPath } from "../utils/navigation-utils";
 import { url } from "../utils/url-utils";
 
@@ -16,9 +13,7 @@ const { variant = "desktop" } = Astro.props;
 const pathname = Astro.url.pathname;
 const firstSegment = pathname.split("/").filter(Boolean)[0];
 
-const configLanguage: SiteLang = siteConfig.lang
-	.toLowerCase()
-	.startsWith("zh")
+const configLanguage: SiteLang = siteConfig.lang.toLowerCase().startsWith("zh")
 	? "zh"
 	: "en";
 
@@ -29,9 +24,7 @@ const currentLang: SiteLang = isSiteLang(firstSegment)
 function getLocalizedUrl(targetLang: SiteLang): string {
 	const pathWithoutLocale = stripLocaleFromPath(pathname);
 
-	return url(
-		`/${targetLang}${pathWithoutLocale}${Astro.url.search}`,
-	);
+	return url(`/${targetLang}${pathWithoutLocale}${Astro.url.search}`);
 }
 
 const englishUrl = getLocalizedUrl("en");

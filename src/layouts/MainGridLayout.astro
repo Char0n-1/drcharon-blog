@@ -40,20 +40,16 @@ const {
 	alternates,
 } = Astro.props;
 
-const resolvedSiteLang =
-	siteLang ?? (lang as SiteLang | undefined);
+const resolvedSiteLang = siteLang ?? (lang as SiteLang | undefined);
 
 const hasBannerCredit =
-	siteConfig.banner.enable &&
-	siteConfig.banner.credit.enable;
+	siteConfig.banner.enable && siteConfig.banner.credit.enable;
 
-const hasBannerLink =
-	!!siteConfig.banner.credit.url;
+const hasBannerLink = !!siteConfig.banner.credit.url;
 
-const mainPanelTop =
-	siteConfig.banner.enable
-		? `calc(${BANNER_HEIGHT}vh - ${MAIN_PANEL_OVERLAPS_BANNER_HEIGHT}rem)`
-		: "5.5rem";
+const mainPanelTop = siteConfig.banner.enable
+	? `calc(${BANNER_HEIGHT}vh - ${MAIN_PANEL_OVERLAPS_BANNER_HEIGHT}rem)`
+	: "5.5rem";
 ---
 
 <Layout

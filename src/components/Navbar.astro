@@ -19,10 +19,7 @@ interface Props {
 	siteLang?: SiteLang;
 }
 
-const {
-	class: className,
-	siteLang,
-} = Astro.props;
+const { class: className, siteLang } = Astro.props;
 
 const currentLang = normalizeSiteLang(siteLang);
 
@@ -43,9 +40,7 @@ function getPresetName(preset: LinkPreset): string {
 }
 
 function getLocalizedPath(path: string): string {
-	const normalizedPath = path.startsWith("/")
-		? path
-		: `/${path}`;
+	const normalizedPath = path.startsWith("/") ? path : `/${path}`;
 
 	if (normalizedPath === "/") {
 		return `/${currentLang}/`;

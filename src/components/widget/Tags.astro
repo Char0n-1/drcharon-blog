@@ -3,10 +3,7 @@ import I18nKey from "../../i18n/i18nKey";
 import { i18n, i18nFor } from "../../i18n/translation";
 import type { SiteLang } from "../../utils/locale-utils";
 import { getTagList } from "../../utils/content-utils";
-import {
-	getLocalizedTagUrl,
-	getTagUrl,
-} from "../../utils/url-utils";
+import { getLocalizedTagUrl, getTagUrl } from "../../utils/url-utils";
 import ButtonTag from "../control/ButtonTag.astro";
 import WidgetLayout from "./WidgetLayout.astro";
 
@@ -16,11 +13,7 @@ interface Props {
 	siteLang?: SiteLang;
 }
 
-const {
-	class: className,
-	style,
-	siteLang,
-} = Astro.props;
+const { class: className, style, siteLang } = Astro.props;
 
 const tags = await getTagList(siteLang);
 

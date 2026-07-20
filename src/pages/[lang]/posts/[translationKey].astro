@@ -66,28 +66,15 @@ const canonical = new URL(
 ).toString();
 
 const alternates = {
-	en: new URL(
-		`/en/posts/${translationKey}/`,
-		Astro.site,
-	).toString(),
+	en: new URL(`/en/posts/${translationKey}/`, Astro.site).toString(),
 
-	zh: new URL(
-		`/zh/posts/${translationKey}/`,
-		Astro.site,
-	).toString(),
+	zh: new URL(`/zh/posts/${translationKey}/`, Astro.site).toString(),
 
-	"x-default": new URL(
-		`/en/posts/${translationKey}/`,
-		Astro.site,
-	).toString(),
+	"x-default": new URL(`/en/posts/${translationKey}/`, Astro.site).toString(),
 };
-function getTranslationKeyFromSlug(
-	slug: string,
-): string | null {
+function getTranslationKeyFromSlug(slug: string): string | null {
 	const normalizedSlug = slug.replaceAll("\\", "/");
-	const parts = normalizedSlug
-		.split("/")
-		.filter(Boolean);
+	const parts = normalizedSlug.split("/").filter(Boolean);
 
 	/*
 	 * Content collection slug:
@@ -104,20 +91,14 @@ function getTranslationKeyFromSlug(
 	return parts.slice(0, -1).join("/");
 }
 
-function getLocalizedAdjacentPostUrl(
-	slug: string,
-): string {
-	const adjacentTranslationKey =
-		getTranslationKeyFromSlug(slug);
+function getLocalizedAdjacentPostUrl(slug: string): string {
+	const adjacentTranslationKey = getTranslationKeyFromSlug(slug);
 
 	if (!adjacentTranslationKey) {
 		return "#";
 	}
 
-	return getLocalizedPath(
-		currentLang,
-		`/posts/${adjacentTranslationKey}/`,
-	);
+	return getLocalizedPath(currentLang, `/posts/${adjacentTranslationKey}/`);
 }
 
 const { Content, headings } = await entry.render();
