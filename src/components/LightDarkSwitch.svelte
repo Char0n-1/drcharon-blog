@@ -11,6 +11,12 @@ import {
 import { onMount } from "svelte";
 import type { LIGHT_DARK_MODE } from "@/types/config.ts";
 
+interface Props {
+	astroClient?: boolean;
+}
+
+let { astroClient: _astroClient = false }: Props = $props();
+
 const seq: LIGHT_DARK_MODE[] = [LIGHT_MODE, DARK_MODE, AUTO_MODE];
 let mode: LIGHT_DARK_MODE = $state(AUTO_MODE);
 
@@ -47,12 +53,18 @@ function toggleScheme() {
 }
 
 function showPanel() {
-	const panel = document.querySelector("#light-dark-panel");
+	const panel = document.querySelector<HTMLElement>("#light-dark-panel");
+
+	if (!panel) return;
+
 	panel.classList.remove("float-panel-closed");
 }
 
 function hidePanel() {
-	const panel = document.querySelector("#light-dark-panel");
+	const panel = document.querySelector<HTMLElement>("#light-dark-panel");
+
+	if (!panel) return;
+
 	panel.classList.add("float-panel-closed");
 }
 </script>
