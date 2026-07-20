@@ -58,21 +58,21 @@ export const profileConfig: ProfileConfig = {
 	bio: "Systems, networking, infrastructure, and troubleshooting notes.",
 	links: [
 		{
-			name: "Twitter",
+			name: "Instagram",
 			icon: "fa6-brands:instagram", // Visit https://icones.js.org/ for icon codes
 			// You will need to install the corresponding icon set if it's not already included
 			// `pnpm add @iconify-json/<icon-set-name>`
 			url: "https://www.instagram.com/tianyi_zhao_?igsh=eGdrMGlrdGF1Njh0&utm_source=qr",
 		},
 		{
-			name: "Steam",
+			name: "LinkedIn",
 			icon: "fa6-brands:linkedin",
 			url: "https://www.linkedin.com/in/tianyi-zhao-94855a330",
 		},
 		{
-			name: "GitHub",
-			icon: "fa6-brands:github",
-			url: "https://github.com/Char0n-1/drcharon-blog",
+			name: "RedNote",
+			icon: "arcticons:xiaohongshu-rednote",
+			url: "https://xhslink.com/m/9QUMhpyrQfs",
 		},
 	],
 };

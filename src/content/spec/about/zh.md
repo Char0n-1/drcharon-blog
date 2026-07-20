@@ -1,9 +1,55 @@
-# About
-This is the demo site for [Fuwari](https://github.com/saicaca/fuwari).
+# 关于
 
-::github{repo="saicaca/fuwari"}
+你好，我是 **Dr. Charon**。
 
-> ### Sources of images used in this site
-> - [Unsplash](https://unsplash.com/)
-> - [星と少女](https://www.pixiv.net/artworks/108916539) by [Stella](https://www.pixiv.net/users/93273965)
-> - [Rabbit - v1.4 Showcase](https://civitai.com/posts/586908) by [Rabbit_YourMajesty](https://civitai.com/user/Rabbit_YourMajesty)
+我在蒙特利尔从事系统与网络管理工作，平时接触的内容包括：
+
+- Windows Server
+- Active Directory
+- Microsoft 365
+- Entra ID
+- Intune
+- VMware / Hyper-V
+- 网络与监控
+- 自动化和故障排查
+
+我写这个博客，主要是为了记录真实环境里的问题。
+
+很多故障不会按照教程里的顺序出现。旧配置、历史遗留、权限、同步、网络和人为操作，经常会一起造成问题。
+
+这里会记录：
+
+- 我遇到过的故障
+- 实际使用过的命令
+- 日志和报错
+- 排查过程
+- 走过的弯路
+- 最后的解决方案
+
+我不会把这里写成百科全书，只想把问题发生时的样子尽量保留下来。
+
+**如果它能帮你少踩一个坑，这个博客就已经完成了它的使命。**
+
+## 工作之外
+
+我也喜欢音乐，平时会接触：
+
+- 现场演出
+- 扩声系统
+- 数字调音台
+- 录音
+- 混音和母带
+
+技术和音乐有一点很像：先找到信号从哪里来，再看它在哪里消失。
+
+感谢你的阅读。
+
+---
+
+## 致谢
+
+这个博客基于 **Astro** 和 **Fuwari** 搭建。
+
+感谢 **saicaca** 开源了 Fuwari，也感谢所有为开源社区贡献时间和代码的人。
+
+正是因为这些优秀的项目存在，我才能把更多时间花在记录问题和分享经验上，而不是重复造轮子。
