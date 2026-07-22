@@ -66,7 +66,7 @@ My first assumption was that the PIN had not actually been provisioned correctly
 The first step was therefore to check the Windows Hello state:
 
 
-```powershell
+```pwsh
 
 dsregcmd /status
 
@@ -214,7 +214,7 @@ I therefore disabled Cloud Trust temporarily and returned to the Key Trust deplo
 
 After the policy change, I checked the device state again:
 
-```powershell
+```pwsh
 
 dsregcmd /status
 
@@ -287,7 +287,7 @@ The next question was:
 I did not use the Event Viewer GUI. Instead, I read the Windows Hello Operational log directly with PowerShell:
 
   
-```powershell
+```pwsh
 
 Get-WinEvent `
 
@@ -364,7 +364,7 @@ The log showed that Windows Hello had successfully completed the earlier stages,
 
 I then queried Events 7001 and 5205 directly:
 
-```powershell
+```pwsh
 
 Get-WinEvent -FilterHashtable @{
 
@@ -378,7 +378,7 @@ Format-List TimeCreated, Id, LevelDisplayName, Message
 
 ```
 
-```powershell
+```pwsh
 
 Get-WinEvent -FilterHashtable @{
 
@@ -444,7 +444,7 @@ The basic Key Trust workflow is:
 
 I therefore checked the user's `msDS-KeyCredentialLink` attribute:
 
-```powershell
+```pwsh
 
 Get-ADUser test.user `
 
@@ -496,7 +496,7 @@ In other words:
 
 I then examined the KDC Operational log on the domain controllers:
 
-```powershell
+```pwsh
 
 Get-WinEvent `
 
@@ -532,7 +532,7 @@ The client had a key, and Active Directory contained the public key, but the KDC
 I checked the Local Computer certificate store on both domain controllers:
 
 
-```powershell
+```pwsh
 
 certutil -store My
 
@@ -622,7 +622,7 @@ The issue was no longer just one expired certificate. The Enterprise PKI itself 
 
 Because the old CA no longer existed and there was no server available to recover, I deployed a new Enterprise Root CA.
 
-```powershell
+```pwsh
 
 Install-WindowsFeature ADCS-Cert-Authority -IncludeManagementTools
 
@@ -630,7 +630,7 @@ Install-WindowsFeature ADCS-Cert-Authority -IncludeManagementTools
 
 The new CA was configured with:
 
-```powershell
+```pwsh
 
 Install-AdcsCertificationAuthority `
 
@@ -655,7 +655,7 @@ Install-AdcsCertificationAuthority `
 After AD CS was installed, I verified that the CA could be discovered from the domain:
 
 
-```powershell
+```pwsh
 
 certutil -config - -ping
 
@@ -683,7 +683,7 @@ This confirmed that the new Enterprise CA was available.
 After the Enterprise CA was operational, I refreshed Group Policy and triggered certificate auto-enrollment:
 
 
-```powershell
+```pwsh
 
 gpupdate /force
 
@@ -694,7 +694,7 @@ certutil -pulse
 I then checked the Local Computer certificate store on both domain controllers again:
 
 
-```powershell
+```pwsh
 
 certutil -store My
 
@@ -725,7 +725,7 @@ CONTOSO-ROOT-CA
 I also confirmed that the new CA certificate had been published to the Enterprise NTAuth store:
 
 
-```powershell
+```pwsh
 
 certutil -enterprise -verifystore NTAuth
 
@@ -750,7 +750,7 @@ This step matters because a domain controller authentication certificate must ch
 
 After certificate enrollment completed, I checked the KDC Operational log again:
 
-```powershell
+```pwsh
 
 Get-WinEvent `
 
@@ -849,7 +849,7 @@ Enterprise CA: CONTOSO-ROOT-CA
 ## 1. Check Device Join and Windows Hello Status
 
 
-```powershell
+```pwsh
 
 dsregcmd /status
 
@@ -957,7 +957,7 @@ For more detailed device registration information:
 
   
 
-```powershell
+```pwsh
 
 dsregcmd /status /debug
 
@@ -977,7 +977,7 @@ Check whether Windows Hello is configured to use Cloud Trust:
 
   
 
-```powershell
+```pwsh
 
 Get-ItemProperty `
 
@@ -1009,7 +1009,7 @@ The values can also be queried individually:
 
   
 
-```powershell
+```pwsh
 
 Get-ItemPropertyValue `
 
@@ -1023,7 +1023,7 @@ Get-ItemPropertyValue `
 
   
 
-```powershell
+```pwsh
 
 Get-ItemPropertyValue `
 
@@ -1067,7 +1067,7 @@ After changing the Intune policy, force a policy refresh:
 
   
 
-```powershell
+```pwsh
 
 gpupdate /force
 
@@ -1087,7 +1087,7 @@ List recent Windows Hello events:
 
   
 
-```powershell
+```pwsh
 
 Get-WinEvent `
 
@@ -1107,7 +1107,7 @@ Show only warning and error events:
 
   
 
-```powershell
+```pwsh
 
 Get-WinEvent `
 
@@ -1133,7 +1133,7 @@ Query authentication failures:
 
   
 
-```powershell
+```pwsh
 
 Get-WinEvent `
 
@@ -1187,7 +1187,7 @@ Query the event that confirms the deployment configuration:
 
   
 
-```powershell
+```pwsh
 
 Get-WinEvent `
 
@@ -1229,7 +1229,7 @@ Filter by relevant keywords:
 
   
 
-```powershell
+```pwsh
 
 Get-WinEvent `
 
@@ -1263,7 +1263,7 @@ Import the Active Directory module:
 
   
 
-```powershell
+```pwsh
 
 Import-Module ActiveDirectory
 
@@ -1275,7 +1275,7 @@ Inspect the user's `msDS-KeyCredentialLink` attribute:
 
   
 
-```powershell
+```pwsh
 
 Get-ADUser test.user `
 
@@ -1291,7 +1291,7 @@ Show only the Key Credential values:
 
   
 
-```powershell
+```pwsh
 
 Get-ADUser test.user `
 
@@ -1307,7 +1307,7 @@ Count the number of Key Credential entries:
 
   
 
-```powershell
+```pwsh
 
 (
 
@@ -1353,7 +1353,7 @@ Check the forest functional level:
 
   
 
-```powershell
+```pwsh
 
 Get-ADForest |
 
@@ -1367,7 +1367,7 @@ Check the domain functional level:
 
   
 
-```powershell
+```pwsh
 
 Get-ADDomain |
 
@@ -1403,7 +1403,7 @@ View the Local Computer personal certificate store:
 
   
 
-```powershell
+```pwsh
 
 certutil -store My
 
@@ -1415,7 +1415,7 @@ Filter for Kerberos-related information:
 
   
 
-```powershell
+```pwsh
 
 certutil -store My |
 
@@ -1431,7 +1431,7 @@ Inspect certificates with PowerShell:
 
   
 
-```powershell
+```pwsh
 
 Get-ChildItem Cert:\LocalMachine\My |
 
@@ -1447,7 +1447,7 @@ Find certificates with the Kerberos Authentication EKU:
 
   
 
-```powershell
+```pwsh
 
 Get-ChildItem Cert:\LocalMachine\My |
 
@@ -1469,7 +1469,7 @@ Find certificates that expire within 60 days:
 
   
 
-```powershell
+```pwsh
 
 Get-ChildItem Cert:\LocalMachine\My |
 
@@ -1497,7 +1497,7 @@ List recent KDC events:
 
   
 
-```powershell
+```pwsh
 
 Get-WinEvent `
 
@@ -1517,7 +1517,7 @@ Show only Events 200 and 302:
 
   
 
-```powershell
+```pwsh
 
 Get-WinEvent `
 
@@ -1575,7 +1575,7 @@ Filter certificate-related KDC events:
 
   
 
-```powershell
+```pwsh
 
 Get-WinEvent `
 
@@ -1609,7 +1609,7 @@ List Enterprise CAs available in the domain:
 
   
 
-```powershell
+```pwsh
 
 certutil -config - -ping
 
@@ -1633,7 +1633,7 @@ View Enterprise CA configuration:
 
   
 
-```powershell
+```pwsh
 
 certutil -config - -
 
@@ -1645,7 +1645,7 @@ Check the CA service:
 
   
 
-```powershell
+```pwsh
 
 Get-Service CertSvc
 
@@ -1657,7 +1657,7 @@ Start the CA service:
 
   
 
-```powershell
+```pwsh
 
 Start-Service CertSvc
 
@@ -1669,7 +1669,7 @@ Restart the CA service:
 
   
 
-```powershell
+```pwsh
 
 Restart-Service CertSvc
 
@@ -1681,7 +1681,7 @@ Check the AD CS role:
 
   
 
-```powershell
+```pwsh
 
 Get-WindowsFeature AD-Certificate
 
@@ -1693,7 +1693,7 @@ List installed AD CS role services:
 
   
 
-```powershell
+```pwsh
 
 Get-WindowsFeature |
 
@@ -1719,7 +1719,7 @@ Verify the Enterprise NTAuth store:
 
   
 
-```powershell
+```pwsh
 
 certutil -enterprise -verifystore NTAuth
 
@@ -1743,7 +1743,7 @@ View all certificates published to NTAuth:
 
   
 
-```powershell
+```pwsh
 
 certutil -enterprise -viewstore NTAuth
 
@@ -1755,7 +1755,7 @@ The NTAuthCertificates object can also be read directly from Active Directory:
 
   
 
-```powershell
+```pwsh
 
 $configurationNamingContext = (
 
@@ -1787,7 +1787,7 @@ Get the Configuration Naming Context:
 
   
 
-```powershell
+```pwsh
 
 $configurationNamingContext = (
 
@@ -1803,7 +1803,7 @@ List Enterprise CAs registered under Enrollment Services:
 
   
 
-```powershell
+```pwsh
 
 Get-ADObject `
 
@@ -1823,7 +1823,7 @@ Inspect the Certification Authorities container:
 
   
 
-```powershell
+```pwsh
 
 Get-ADObject `
 
@@ -1843,7 +1843,7 @@ Inspect the AIA container:
 
   
 
-```powershell
+```pwsh
 
 Get-ADObject `
 
@@ -1863,7 +1863,7 @@ Inspect the CDP container:
 
   
 
-```powershell
+```pwsh
 
 Get-ADObject `
 
@@ -1897,7 +1897,7 @@ Refresh computer Group Policy:
 
   
 
-```powershell
+```pwsh
 
 gpupdate /force
 
@@ -1909,7 +1909,7 @@ Trigger certificate auto-enrollment:
 
   
 
-```powershell
+```pwsh
 
 certutil -pulse
 
@@ -1921,7 +1921,7 @@ Check certificate auto-enrollment events:
 
   
 
-```powershell
+```pwsh
 
 Get-WinEvent `
 
@@ -1941,7 +1941,7 @@ Show only warning and error events:
 
   
 
-```powershell
+```pwsh
 
 Get-WinEvent `
 
@@ -1967,7 +1967,7 @@ After auto-enrollment completes, check the certificate store again:
 
   
 
-```powershell
+```pwsh
 
 certutil -store My
 

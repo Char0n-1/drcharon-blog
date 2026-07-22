@@ -10,7 +10,7 @@ tags:
   - Windows-Server
 category: Infrastructure
 lang: zh
-draft:
+draft: false
 ---
 # 前言
 
@@ -915,7 +915,7 @@ Member Server
 只要 DC01 自身能够稳定同步 PDC01，这就是正常且受支持的域时间同步链路。
 
 正确配置参考
-```powershell
+```pwsh
 PS C:\Windows\system32> w32tm /query /status
 Leap Indicator: 0(no warning)
 Stratum: 6 (secondary reference - syncd by (S)NTP)
