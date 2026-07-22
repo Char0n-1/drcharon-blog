@@ -11,7 +11,7 @@ tags:
   - Active-Directory
 category: Microsoft 365
 lang: en
-draft:
+draft: false
 ---
 
 # Introduction

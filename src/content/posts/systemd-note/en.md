@@ -1,0 +1,228 @@
+---
+title: Systemd Quick Reference
+published: 2024-07-28
+description: A practical systemd cheat sheet covering common commands, custom services, unit files, logs, troubleshooting, and package ownership.
+tags:
+  - Linux
+  - Systemd
+  - Ubuntu
+  - DevOps
+category: Linux
+draft: false
+lang: en
+---
+---
+## Common Commands
+
+List all service units that are configured to start automatically at boot.
+
+```bash
+systemctl list-unit-files --type=service --state=enabled
+```
+
+List all currently running services.
+
+```bash
+systemctl list-units --type=service --state=running
+```
+
+Check whether a service is enabled at boot and whether it is currently running.
+
+```bash
+systemctl is-enabled nginx.service
+systemctl is-active nginx.service
+```
+
+Start, stop, restart, enable, and check the status of a service.
+
+```bash
+systemctl start nginx
+systemctl stop nginx
+systemctl restart nginx
+systemctl enable nginx
+systemctl status nginx
+```
+
+---
+
+## Create a Custom Spring Boot Service
+
+```bash
+cat <<'EOF' >/etc/systemd/system/hello.service
+[Unit]
+Description=Spring Boot HelloWorld
+After=syslog.target
+After=network.target
+
+[Service]
+User=username
+Type=simple
+ExecStart=/usr/bin/java -jar /root/hello.jar
+Restart=always
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=helloworld
+
+[Install]
+WantedBy=multi-user.target
+EOF
+```
+
+---
+
+## Default Locations of systemd Unit Files
+
+(See `man systemd.unit` for more details.)
+
+```text
+Table 1. Load path when running in system mode (--system).
+
+┌────────────────────┬─────────────────────────────┐
+│ Path               │ Description                 │
+├────────────────────┼─────────────────────────────┤
+│ /etc/systemd/system│ Local configuration         │
+├────────────────────┼─────────────────────────────┤
+│ /run/systemd/system│ Runtime units               │
+├────────────────────┼─────────────────────────────┤
+│ /lib/systemd/system│ Units of installed packages │
+└────────────────────┴─────────────────────────────┘
+```
+
+> [!NOTE]
+>
+> - `/etc/systemd/system` contains locally created or customized unit files.
+> - `/lib/systemd/system` (or `/usr/lib/systemd/system` on many modern distributions) contains unit files installed by software packages.
+> - `/run/systemd/system` is used for runtime-generated or temporary unit files.
+
+---
+
+## Reload systemd After Modifying a Unit
+
+```bash
+systemctl daemon-reload
+```
+
+Whenever you create or modify a unit file, you should reload the systemd manager.
+
+Reloading the configuration does **not** restart the service automatically, so you will usually need to run:
+
+```bash
+systemctl restart hello.service
+```
+
+---
+
+## Verify the Syntax of a Unit File
+
+```bash
+systemd-analyze verify /etc/systemd/system/hello.service
+```
+
+---
+
+## List Failed Units
+
+```bash
+systemctl --failed
+```
+
+List only failed services.
+
+```bash
+systemctl --failed --type=service
+```
+
+---
+
+## View Service Logs
+
+```bash
+journalctl -u hello.service
+journalctl -u hello.service -b
+journalctl -u hello.service -f
+journalctl -u hello.service --since "30 minutes ago"
+```
+
+---
+
+## Clear the Failed State
+
+If a service still shows as failed after fixing the issue:
+
+```bash
+systemctl reset-failed hello.service
+```
+
+Then start the service again:
+
+```bash
+systemctl start hello.service
+```
+
+---
+
+## Use Drop-in Overrides Instead of Editing Package Files
+
+Avoid modifying package-managed unit files directly, such as:
+
+```text
+/lib/systemd/system/nginx.service
+```
+
+Your changes may be overwritten during package upgrades.
+
+Instead, create a drop-in override:
+
+```bash
+systemctl edit nginx.service
+```
+
+Example:
+
+```ini
+[Service]
+Restart=on-failure
+RestartSec=5s
+```
+
+View the merged configuration:
+
+```bash
+systemctl cat nginx.service
+```
+
+Remove all local overrides and restore the original configuration:
+
+```bash
+systemctl revert nginx.service
+```
+
+---
+
+## Find Which Package Installed a Unit File
+
+```bash
+dpkg-query -S /lib/systemd/system/* | sort -u
+```
+
+Example output:
+
+```text
+dpkg-query: no path found matching pattern /lib/systemd/system/ecs_mq.service
+dpkg-query: no path found matching pattern /lib/systemd/system/SplunkForwarder.service
+dpkg-query: no path found matching pattern /lib/systemd/system/system-systemd\x2dcryptsetup.slice
+accountsservice: /lib/systemd/system/accounts-daemon.service
+apparmor: /lib/systemd/system/apparmor.service
+apt: /lib/systemd/system/apt-daily.service
+apt: /lib/systemd/system/apt-daily.timer
+apt: /lib/systemd/system/apt-daily-upgrade.service
+apt: /lib/systemd/system/apt-daily-upgrade.timer
+at: /lib/systemd/system/atd.service
+auditd: /lib/systemd/system/auditd.service
+base-files: /lib/systemd/system/motd-news.service
+base-files: /lib/systemd/system/motd-news.timer
+```
+
+> [!NOTE]
+>
+> If `dpkg-query` cannot find a matching package, it simply means that no package recorded ownership of that path in the dpkg database. The unit file may have been created manually, installed by a third-party installer, generated by a package installation script, or generated dynamically by a systemd generator. Installing a package manually with `dpkg -i` **does not** normally prevent `dpkg-query -S` from identifying files that belong to that package.
