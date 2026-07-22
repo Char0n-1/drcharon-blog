@@ -271,7 +271,7 @@ However, client computers were unable to connect to the FTP server.
 
 Run the following commands on the FTP server:
 
-```pwsh
+```ps1
 PS C:\Windows\system32> systeminfo | findstr /B /C:"OS Name" /C:"OS Version"
 
 OS Name:    Microsoft Windows Server 2016 Standard
@@ -322,13 +322,13 @@ At this point, there were no obvious issues on the server side.
 
 Open PowerShell on a client computer and run:
 
-```pwsh
+```ps1
 Test-NetConnection 192.168.1.129 -Port 21
 ```
 
 Output:
 
-```pwsh
+```ps1
 WARNING: TCP connect to (192.168.1.129 : 21) failed
 
 ComputerName     : 192.168.1.129
@@ -343,13 +343,13 @@ TcpTestSucceeded : False
 
 Run the following command on the FTP server:
 
-```pwsh
+```ps1
 Get-NetFirewallRule -DisplayGroup "FTP Server" | Select DisplayName, Enabled
 ```
 
 Output:
 
-```pwsh
+```ps1
 DisplayName                                 Enabled
 -----------                                 -------
 FTP Server (FTP Traffic-In)                 True
@@ -368,7 +368,7 @@ Everything appeared to be configured correctly.
 
 Run:
 
-```pwsh
+```ps1
 Set-NetFirewallProfile -Profile Domain -Enabled False
 ```
 
@@ -388,7 +388,7 @@ This confirmed that:
 
 Re-enable the firewall:
 
-```pwsh
+```ps1
 Set-NetFirewallProfile -Profile Domain -Enabled True
 ```
 
@@ -396,7 +396,7 @@ Instead of relying on the firewall rules created automatically by IIS, we create
 
 Run:
 
-```pwsh
+```ps1
 New-NetFirewallRule `
     -DisplayName "Scanner FTP 21" `
     -Direction Inbound `
@@ -473,7 +473,7 @@ After configuring the passive port range in IIS, Windows Defender Firewall must 
 
 Run:
 
-```pwsh
+```ps1
 New-NetFirewallRule `
     -DisplayName "FTP Passive Ports" `
     -Direction Inbound `
@@ -772,25 +772,25 @@ The following PowerShell and Windows commands were used throughout this deployme
 
 Verify that the IIS FTP service is running.
 
-```pwsh
+```ps1
 Get-Service ftpsvc
 ```
 
 Start the FTP service:
 
-```pwsh
+```ps1
 Start-Service ftpsvc
 ```
 
 Stop the FTP service:
 
-```pwsh
+```ps1
 Stop-Service ftpsvc
 ```
 
 Restart the FTP service:
 
-```pwsh
+```ps1
 Restart-Service ftpsvc
 ```
 
@@ -800,7 +800,7 @@ Restart-Service ftpsvc
 
 Verify that the FTP server is listening on TCP port 21.
 
-```pwsh
+```ps1
 netstat -ano | findstr :21
 ```
 
@@ -818,7 +818,7 @@ then IIS has successfully bound to port 21.
 
 Verify that the client can reach the FTP server.
 
-```pwsh
+```ps1
 Test-NetConnection 192.168.x.x -Port 21
 ```
 
@@ -861,7 +861,7 @@ bye
 
 View the status of all Firewall Profiles.
 
-```pwsh
+```ps1
 Get-NetFirewallProfile
 ```
 
@@ -871,13 +871,13 @@ Get-NetFirewallProfile
 
 Use this only to verify whether the firewall is causing the issue.
 
-```pwsh
+```ps1
 Set-NetFirewallProfile -Profile Domain -Enabled False
 ```
 
 Re-enable it afterward:
 
-```pwsh
+```ps1
 Set-NetFirewallProfile -Profile Domain -Enabled True
 ```
 
@@ -889,7 +889,7 @@ Set-NetFirewallProfile -Profile Domain -Enabled True
 
 Allow the FTP control connection (TCP 21).
 
-```pwsh
+```ps1
 New-NetFirewallRule `
     -DisplayName "Scanner FTP" `
     -Direction Inbound `
@@ -905,7 +905,7 @@ New-NetFirewallRule `
 
 List all FTP-related firewall rules.
 
-```pwsh
+```ps1
 Get-NetFirewallRule |
 Where-Object DisplayName -like "*FTP*"
 ```

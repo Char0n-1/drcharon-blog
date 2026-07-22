@@ -258,7 +258,7 @@ FTP 本地测试一切正常。
 
 但是客户端始终无法连接。
 ## 确认FTP服务运行，FTP Site启动，监听21端口
-```pwsh
+```ps1
 PS C:\Windows\system32> systeminfo | findstr /B /C:"OS Name" /C:"OS Version" 
 OS Name:    Microsoft Windows Server 2016 Standard 
 OS Version: 10.0.14393 N/A Build 14393 
@@ -306,12 +306,12 @@ Scanner FTP   Started
 
 ### 测试TCP连接
 打开一台客户端的Powershell, 执行：
-```pwsh
+```ps1
 Test-NetConnection 192.168.1.129 -Port 21
 ```
 
 输出：
-```pwsh
+```ps1
 WARNING: TCP connect to (192.168.1.129 : 21) failed 
 ComputerName : 192.168.1.129 
 RemoteAddress : 192.168.1.129 
@@ -326,12 +326,12 @@ TcpTestSucceeded : False
 ## 检测防火墙规则
 
 在FTP服务器执行：
-```pwsh
+```ps1
 Get-NetFirewallRule -DisplayGroup "FTP Server" | Select DisplayName, Enabled
 ```
 
 输出：
-```pwsh
+```ps1
 DisplayName Enabled 
 ----------- ------- 
 FTP Server (FTP Traffic-In) True 
@@ -349,7 +349,7 @@ FTP Server Passive (FTP Passive Traffic-In) True
 
 在服务器执行：
 
-```pwsh
+```ps1
 Set-NetFirewallProfile -Profile Domain -Enabled False
 ```
 ![](Pasted%20image%2020260722115720.png)
@@ -363,7 +363,7 @@ Set-NetFirewallProfile -Profile Domain -Enabled False
 
 把它重新打开：
 
-```pwsh
+```ps1
 Set-NetFirewallProfile -Profile Domain -Enabled True
 ```
 
@@ -373,7 +373,7 @@ Set-NetFirewallProfile -Profile Domain -Enabled True
 
 服务器执行：
 
-```pwsh
+```ps1
 New-NetFirewallRule `
     -DisplayName "Scanner FTP 21" `
     -Direction Inbound `
@@ -763,25 +763,25 @@ SharePoint
 
 查看 IIS FTP 服务是否已经启动。
 
-```pwsh
+```ps1
 Get-Service ftpsvc
 ```
 
 启动 FTP 服务：
 
-```pwsh
+```ps1
 Start-Service ftpsvc
 ```
 
 停止 FTP 服务：
 
-```pwsh
+```ps1
 Stop-Service ftpsvc
 ```
 
 重启 FTP 服务：
 
-```pwsh
+```ps1
 Restart-Service ftpsvc
 ```
 
@@ -791,7 +791,7 @@ Restart-Service ftpsvc
 
 确认 FTP Server 是否已经开始监听 TCP 21。
 
-```pwsh
+```ps1
 netstat -ano | findstr :21
 ```
 
@@ -809,7 +809,7 @@ LISTENING
 
 验证客户端是否能够访问 FTP Server。
 
-```pwsh
+```ps1
 Test-NetConnection 192.168.x.x -Port 21
 ```
 
@@ -852,7 +852,7 @@ bye
 
 查看各 Firewall Profile 是否启用。
 
-```pwsh
+```ps1
 Get-NetFirewallProfile
 ```
 
@@ -862,13 +862,13 @@ Get-NetFirewallProfile
 
 验证问题是否由防火墙导致。
 
-```pwsh
+```ps1
 Set-NetFirewallProfile -Profile Domain -Enabled False
 ```
 
 恢复：
 
-```pwsh
+```ps1
 Set-NetFirewallProfile -Profile Domain -Enabled True
 ```
 
@@ -880,7 +880,7 @@ Set-NetFirewallProfile -Profile Domain -Enabled True
 
 开放 FTP 控制连接（TCP 21）。
 
-```pwsh
+```ps1
 New-NetFirewallRule `
     -DisplayName "Scanner FTP" `
     -Direction Inbound `
@@ -896,7 +896,7 @@ New-NetFirewallRule `
 
 列出 FTP 相关规则。
 
-```pwsh
+```ps1
 Get-NetFirewallRule |
 Where-Object DisplayName -like "*FTP*"
 ```

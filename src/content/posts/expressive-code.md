@@ -65,7 +65,7 @@ echo "This terminal frame has no title"
 
 ---
 
-```pwsh title="PowerShell terminal example"
+```ps1 title="PowerShell terminal example"
 Write-Output "This one has a title!"
 ```
 

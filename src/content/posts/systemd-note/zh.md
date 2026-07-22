@@ -21,13 +21,13 @@ systemctl list-unit-files --type=service --state=enabled
 
 查看当前正在运行的服务：
 
-```Bash
+```bash
 systemctl list-units --type=service --state=running
 ```
 
 分别判断开机启动和当前运行状态：
 
-```Bash
+```bash
 systemctl is-enabled nginx.service
 systemctl is-active nginx.service
 ```
