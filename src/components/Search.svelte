@@ -1,11 +1,11 @@
 <script lang="ts">
-import type { SearchResult } from "@/global";
-import Icon from "@iconify/svelte";
 import I18nKey from "@i18n/i18nKey";
 import { i18nFor } from "@i18n/translation";
+import Icon from "@iconify/svelte";
 import type { SiteLang } from "@utils/locale-utils";
 import { url } from "@utils/url-utils.ts";
 import { onMount } from "svelte";
+import type { SearchResult } from "@/global";
 
 export let siteLang: SiteLang = "en";
 

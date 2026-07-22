@@ -1,8 +1,8 @@
 import { type CollectionEntry, getCollection } from "astro:content";
 import I18nKey from "@i18n/i18nKey";
 import { i18n, i18nFor } from "@i18n/translation";
-import type { SiteLang } from "./locale-utils";
 import { getCategoryUrl, getLocalizedCategoryUrl } from "@utils/url-utils.ts";
+import type { SiteLang } from "./locale-utils";
 
 // // Retrieve posts and sort them by publication date
 async function getRawSortedPosts() {
