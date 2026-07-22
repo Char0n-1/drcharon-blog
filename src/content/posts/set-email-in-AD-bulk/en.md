@@ -9,7 +9,7 @@ tags:
   - Windows-Server
 category: Toolbox
 draft: false
-lang: zh
+lang: en
 ---
 ---
 During the deployment of a system that supports **LDAP synchronization**, I noticed that many users were successfully synced but had no email address associated with their accounts.
