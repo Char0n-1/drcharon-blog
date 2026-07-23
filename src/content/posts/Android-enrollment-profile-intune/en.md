@@ -1,6 +1,6 @@
 ---
 title: "Intune Android COPE Staging in Practice: Fixing Enrollment Rollback After Powering Off at Microsoft Sign-In"
-published: 2026-07-13
+published: 2026-07-23
 description: "An Intune Android COPE staging case study: why the process worked on Sonim devices but failed on Samsung, and how Via Staging solved the deployment issue."
 tags:
   - Intune
