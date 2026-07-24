@@ -309,7 +309,7 @@ IT 恢复设备出厂设置
 
 # Knowledge Base
 
-## Default Token（你现在用的）
+## Default Token
 
 流程是：
 
