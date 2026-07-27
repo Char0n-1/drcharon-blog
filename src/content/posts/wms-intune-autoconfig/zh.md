@@ -66,11 +66,13 @@ lang: zh
 首先，需要确保 WMS 已经作为 **Managed Google Play App** 添加到 Intune。
 
 进入：
-Microsoft Intune Admin Center  
-→ Apps  
-→ Android  
+```
+Microsoft Intune Admin Center
+→ Apps
+→ Android 
 → Add  
 → Managed Google Play app
+```
 
 
 搜索：
