@@ -1,6 +1,6 @@
 ---
 title: 使用 PowerShell 批量配置 Universal Print Connector 打印机
-published: 2026-07-13
+published: 2026-07-27
 description: 利用 UniversalPrintManagement PowerShell 模块，自动完成 Universal Print Connector 打印机的位置配置、共享创建以及权限授权，实现批量部署自动化。
 tags:
   - PowerShell

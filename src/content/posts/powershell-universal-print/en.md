@@ -1,6 +1,6 @@
 ---
 title: Bulk Configure Universal Print Connector Printers with PowerShell
-published: 2026-07-13
+published: 2026-07-27
 description: Use the UniversalPrintManagement PowerShell module to configure printer locations, create printer shares, grant access, and export deployment results in bulk.
 tags:
   - PowerShell
