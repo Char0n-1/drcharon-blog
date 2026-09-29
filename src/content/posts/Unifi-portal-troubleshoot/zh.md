@@ -297,7 +297,7 @@ Controller 的程序文件仍然存在，其中包括应用运行环境以及数
 
 > “这个安装原来到底是怎么启动的？为什么现在这条启动路径不工作了？”
 
-# 5. 检查 `start.bat`
+# 4. 检查 `start.bat`
 
 Controller 安装目录中包含自己的启动脚本：
 
@@ -355,7 +355,7 @@ versions up to 55.0
 
 ---
 
-# 6. 理解 Java 报错
+# 5. 理解 Java 报错
 
 Java 的 Class File Version 与 Java Release 是对应的。
 
@@ -416,7 +416,7 @@ OpenJDK 64-Bit Server VM Temurin-25+36
 
 ---
 
-# 7. 为什么 `start.bat` 使用了错误的 Java
+# 6. 为什么 `start.bat` 使用了错误的 Java
 
 启动脚本中调用的只是：
 
@@ -438,7 +438,7 @@ C:\Users\Administrator\Ubiquiti UniFi\jre\bin\java.exe
 
 这就导致了版本不兼容。
 
-# 8. 先临时恢复服务
+# 7. 先临时恢复服务
 
 到这里，启动失败的根本原因已经明确：
 
@@ -482,7 +482,7 @@ cd "C:\Users\Administrator\Ubiquiti UniFi\bin"
 
 这个处理方案从一开始就被视为一个 **Recovery Step，而不是最终修复方案**。
 
-# 9. UniFi Controller 恢复
+# 8. UniFi Controller 恢复
 
 修正 Java Runtime 不匹配的问题之后，UniFi Network Controller 成功重新启动。
 
