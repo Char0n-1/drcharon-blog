@@ -1,6 +1,6 @@
 ---
 title: 排查 Windows Server 重启后 UniFi Controller 无法启动的问题
-published: 2026-07-13
+published: 2026-09-29
 description: A real-world troubleshooting case involving a UniFi Network Controller that stopped responding after a Windows Server reboot, eventually traced to a missing service registration and a Java runtime version mismatch.
 tags:
   - Unifi
