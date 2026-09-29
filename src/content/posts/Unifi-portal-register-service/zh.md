@@ -8,7 +8,7 @@ tags:
   - Windows-Server
   - Java
   - Windows-Service
-  - Trou
+  - Troubleshooting
 category: Infrastructure
 draft: false
 lang: zh
