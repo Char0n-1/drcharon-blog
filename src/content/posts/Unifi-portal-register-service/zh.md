@@ -1,7 +1,7 @@
 ---
 title: 恢复 UniFi Network Server 的 Windows Service
 published: 2026-09-29
-description: "A follow-up to a UniFi Controller recovery: rebuilding the missing Windows service, binding it to the bundled Java 25 runtime, and validating automatic startup after a server reboot."
+description: 上一篇 UniFi Controller 恢复案例的后续：重新创建缺失的 Windows Service，绑定 UniFi 自带的 Java 25 Runtime，并验证服务器重启后能够自动启动。
 tags:
   - Unifi
   - Ubiquiti
