@@ -339,7 +339,7 @@ cd "C:\Users\Administrator\Ubiquiti UniFi\bin"
 
 但 Java 并没有正常启动 Controller，而是返回：
 
-```poweshell
+```powershell
 Error: LinkageError occurred while loading main class com.ubnt.ace.Launcher
 
 java.lang.UnsupportedClassVersionError:
@@ -400,7 +400,7 @@ C:\Users\Administrator\Ubiquiti UniFi\jre
 
 检查这个 Java 的版本：
 
-```powershll
+```powershell
 & "C:\Users\Administrator\Ubiquiti UniFi\jre\bin\java.exe" -version
 ```
 
