@@ -152,7 +152,7 @@ String
 
 Example:
 
-```JSON
+```json
 {
   "ConnectionList": [
     {
