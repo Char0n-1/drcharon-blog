@@ -137,7 +137,7 @@ For an on-premises domain-joined computer, the Hybrid Joined identity is normall
 
 > Use this sequence when an on-premises AD device has synchronized to Entra, but Hybrid Join remains `Pending`, the device is missing from Intune, and Windows Hello cannot be configured.
 
-```powershell
+```powershell title="PowerShell terminal"
 # 1. Check the current Hybrid Join, PRT, Workplace Join, and MDM state
 dsregcmd /status
 
@@ -264,13 +264,13 @@ dsregcmd /status
 
 Run the following command on the device:
 
-```powershell
+```powershell title="PowerShell terminal"
 dsregcmd /status
 ```
 
 At the beginning of the investigation, the device showed:
 
-```powershell
+```powershell title="PowerShell terminal"
 AzureAdJoined : NO
 DomainJoined  : YES
 ```
@@ -296,13 +296,13 @@ Microsoft Entra Hybrid Join is normally triggered by the following scheduled tas
 
 First, refresh computer policy:
 
-```powershell
+```powershell title="PowerShell terminal"
 gpupdate /force
 ```
 
 Check whether the task exists:
 
-```powershell
+```powershell title="PowerShell terminal"
 Get-ScheduledTask `
     -TaskPath "\Microsoft\Windows\Workplace Join\" `
     -TaskName "Automatic-Device-Join"
@@ -310,7 +310,7 @@ Get-ScheduledTask `
 
 Start it manually:
 
-```powershell
+```powershell title="PowerShell terminal"
 Start-ScheduledTask `
     -TaskPath "\Microsoft\Windows\Workplace Join\" `
     -TaskName "Automatic-Device-Join"
@@ -318,19 +318,19 @@ Start-ScheduledTask `
 
 The same task can also be started with:
 
-```powershell
+```powershell title="PowerShell terminal"
 schtasks /Run /TN "\Microsoft\Windows\Workplace Join\Automatic-Device-Join"
 ```
 
 After waiting for a short time, check the device again:
 
-```powershell
+```powershell title="PowerShell terminal"
 dsregcmd /status
 ```
 
 The device had still not completed registration, so the next command was used:
 
-```powershell
+```powershell title="PowerShell terminal"
 dsregcmd /debug /join
 ```
 
@@ -340,7 +340,7 @@ dsregcmd /debug /join
 
 The first attempt returned:
 
-```powershell
+```powershell title="PowerShell terminal"
 DsrCmdAccountMgr::IsDomainControllerAvailable:
 DsGetDcName No domain controller is available for the specified domain
 or the domain does not exist: 0x8007054b.
@@ -357,13 +357,13 @@ The computer was not connected to the corporate network at that time, so a VPN c
 
 Domain controller discovery was tested with:
 
-```powershell
+```powershell title="PowerShell terminal"
 nltest /dsgetdc:corp.example.com
 ```
 
 A successful result looked similar to:
 
-```powershell
+```powershell title="PowerShell terminal"
 DC: \\DC2.corp.example.com
 Address: \\192.168.1.8
 Flags: GC DS LDAP KDC TIMESERV WRITABLE DNS_DC
@@ -371,13 +371,13 @@ Flags: GC DS LDAP KDC TIMESERV WRITABLE DNS_DC
 
 The computer secure channel was then checked:
 
-```powershell
+```powershell title="PowerShell terminal"
 nltest /sc_verify:corp.example.com
 ```
 
 The result was:
 
-```powershell
+```powershell title="PowerShell terminal"
 Trusted DC Connection Status Status = 0 0x0 NERR_Success
 Trust Verification Status = 0 0x0 NERR_Success
 ```
@@ -397,13 +397,13 @@ This confirmed that:
 
 Running the following command again:
 
-```powershell
+```powershell title="PowerShell terminal"
 dsregcmd /debug /join
 ```
 
 returned:
 
-```powershell
+```powershell title="PowerShell terminal"
 DsrCmdAccountMgr::IsDomainControllerAvailable:
 DsGetDcName success
 
@@ -420,7 +420,7 @@ TenantInfo::Discover failed with error code 0x801c001d.
 
 The main error code was:
 
-```powershell
+```powershell title="PowerShell terminal"
 0x801c001d
 ```
 
@@ -428,7 +428,7 @@ The device could now reach a domain controller, but it could not read the tenant
 
 The Hybrid Join client normally reads the following values from the Active Directory Service Connection Point, or SCP:
 
-```powershell
+```powershell title="PowerShell terminal"
 azureADName
 azureADId
 ```
@@ -439,7 +439,7 @@ azureADId
 
 On a domain controller, or on a management computer with the Active Directory PowerShell module installed, run:
 
-```powershell
+```powershell title="PowerShell terminal"
 $ConfigNC = (Get-ADRootDSE).configurationNamingContext
 
 $SCPPath = "CN=62a0ff2e-97b9-4513-943f-0d221bd30080," +
@@ -454,7 +454,7 @@ $SCP.keywords
 
 The result was similar to:
 
-```powershell
+```powershell title="PowerShell terminal"
 CN=62a0ff2e-97b9-4513-943f-0d221bd30080,
 CN=Device Registration Configuration,
 CN=Services,
@@ -477,7 +477,7 @@ Using a `.onmicrosoft.com` value for `azureADName` is not inherently a problem, 
 
 To rule out a domain controller or AD replication issue, the same SCP was queried directly from L108:
 
-```powershell
+```powershell title="PowerShell terminal"
 $ConfigNC = ([ADSI]"LDAP://RootDSE").configurationNamingContext
 
 $SCPPath = "LDAP://CN=62a0ff2e-97b9-4513-943f-0d221bd30080," +
@@ -492,14 +492,14 @@ $SCP.keywords
 
 L108 successfully returned:
 
-```powershell
+```powershell title="PowerShell terminal"
 azureADName:tenant.onmicrosoft.com
 azureADId:00000000-0000-0000-0000-000000000000
 ```
 
 The current domain controller was then specified explicitly:
 
-```powershell
+```powershell title="PowerShell terminal"
 $SCPDN = "CN=62a0ff2e-97b9-4513-943f-0d221bd30080," +
          "CN=Device Registration Configuration," +
          "CN=Services,CN=Configuration,DC=corp,DC=example,DC=com"
@@ -527,13 +527,13 @@ Windows can use a local registry configuration to override the Active Directory 
 
 Check the following path:
 
-```powershell
+```powershell title="PowerShell terminal"
 reg query "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\CDJ\AAD"
 ```
 
 The computer returned:
 
-```powershell
+```powershell title="PowerShell terminal"
 ERROR: The system was unable to find the specified registry key or value.
 ```
 
@@ -543,7 +543,7 @@ When the key does not exist, Windows continues to use the Active Directory SCP.
 
 If the key exists, check that these values match the current tenant:
 
-```powershell
+```powershell title="PowerShell terminal"
 TenantId
 TenantName
 ```
@@ -556,19 +556,19 @@ An incorrect tenant ID, an old domain name, or an empty value can override an ot
 
 The scheduled task was started again:
 
-```powershell
+```powershell title="PowerShell terminal"
 schtasks /Run /TN "\Microsoft\Windows\Workplace Join\Automatic-Device-Join"
 ```
 
 Immediately running:
 
-```powershell
+```powershell title="PowerShell terminal"
 dsregcmd /debug /join
 ```
 
 returned:
 
-```powershell
+```powershell title="PowerShell terminal"
 Another instance of the Join Task is already running.
 Please retry after sometime.
 ```
@@ -579,13 +579,13 @@ At this point, repeatedly starting additional join processes would not help. The
 
 After a few minutes, the command was run again:
 
-```powershell
+```powershell title="PowerShell terminal"
 dsregcmd /debug /join
 ```
 
 This time the output showed:
 
-```powershell
+```powershell title="PowerShell terminal"
 DsrCmdAccountMgr::IsDomainControllerAvailable:
 DsGetDcName success
 
@@ -606,7 +606,7 @@ The device is already joined.
 
 The important fields were:
 
-```powershell
+```powershell title="PowerShell terminal"
 deviceKeysHealthy: YES
 isJoined: YES
 ```
@@ -619,13 +619,13 @@ This confirmed that the device had successfully completed Microsoft Entra Hybrid
 
 Run:
 
-```powershell
+```powershell title="PowerShell terminal"
 dsregcmd /status
 ```
 
 The device state had changed to:
 
-```powershell
+```powershell title="PowerShell terminal"
 AzureAdJoined    : YES
 DomainJoined     : YES
 DeviceAuthStatus : SUCCESS
@@ -633,7 +633,7 @@ DeviceAuthStatus : SUCCESS
 
 For example:
 
-```powershell
+```powershell title="PowerShell terminal"
 Device State
 ------------
 
@@ -645,7 +645,7 @@ Device Name   : L108.corp.example.com
 
 The device details also showed:
 
-```powershell
+```powershell title="PowerShell terminal"
 DeviceAuthStatus : SUCCESS
 TpmProtected     : YES
 KeyProvider      : Microsoft Platform Crypto Provider
@@ -660,7 +660,7 @@ This meant that:
 
 The Hybrid Joined object that previously showed:
 
-```powershell
+```powershell title="PowerShell terminal"
 Registered: Pending
 ```
 
@@ -672,7 +672,7 @@ would then update to a specific registration time in the Entra admin center.
 
 Although Hybrid Join was now working, the user context still showed:
 
-```powershell
+```powershell title="PowerShell terminal"
 WorkplaceJoined : YES
 WorkAccountCount: 1
 AzureAdPrt      : NO
@@ -680,20 +680,20 @@ AzureAdPrt      : NO
 
 There was also a separate Workplace device ID:
 
-```powershell
+```powershell title="PowerShell terminal"
 WorkplaceDeviceId : 08486976-c661-4d5a-8648-730a4200c3ee
 ```
 
 This meant that the user profile still contained an old user-scoped device identity.
 
-```powershell
+```powershell title="PowerShell terminal"
 Microsoft Entra registered
 ```
 
 
 This registration had probably been created when the user previously added a work account from:
 
-```powershell
+```powershell title="PowerShell terminal"
 Settings
 → Accounts
 → Access work or school
@@ -748,7 +748,7 @@ The second connection is the on-premises Active Directory domain relationship. D
 
 After disconnecting the old work account, sign out:
 
-```powershell
+```powershell title="PowerShell terminal"
 shutdown /l
 ```
 
@@ -760,13 +760,13 @@ Then sign back in with the user's on-premises domain account.
 
 After signing back in, run:
 
-```powershell
+```powershell title="PowerShell terminal"
 dsregcmd /status
 ```
 
 The user state changed to:
 
-```powershell
+```powershell title="PowerShell terminal"
 WorkplaceJoined : NO
 WamDefaultSet   : YES
 AzureAdPrt      : YES
@@ -774,7 +774,7 @@ AzureAdPrt      : YES
 
 The Tenant Details section also contained the complete MDM URLs:
 
-```powershell
+```powershell title="PowerShell terminal"
 TenantName       : example.com
 MdmUrl           : https://enrollment.manage.microsoft.com/enrollmentserver/discovery.svc
 MdmTouUrl        : https://portal.manage.microsoft.com/TermsofUse.aspx
@@ -783,7 +783,7 @@ MdmComplianceUrl : https://portal.manage.microsoft.com/?portalAction=Compliance
 
 The SSO state showed:
 
-```powershell
+```powershell title="PowerShell terminal"
 AzureAdPrt : YES
 CloudTgt   : YES
 ```
@@ -822,7 +822,7 @@ It is used for:
 
 For a Hybrid Joined device, the expected state is normally:
 
-```powershell
+```powershell title="PowerShell terminal"
 AzureAdJoined : YES
 DomainJoined  : YES
 AzureAdPrt    : YES
@@ -838,19 +838,19 @@ Device identity and user identity must be checked separately.
 
 Run the following from an elevated PowerShell window:
 
-```powershell
+```powershell title="PowerShell terminal"
 gpupdate /force
 ```
 
 Then check the registry:
 
-```powershell
+```powershell title="PowerShell terminal"
 reg query "HKLM\SOFTWARE\Policies\Microsoft\Windows\CurrentVersion\MDM"
 ```
 
 The computer returned:
 
-```powershell
+```powershell title="PowerShell terminal"
 AutoEnrollMDM         REG_DWORD    0x1
 UseAADCredentialType  REG_DWORD    0x1
 MDMApplicationId      REG_SZ
@@ -882,7 +882,7 @@ Credential Type: User Credential
 
 Run:
 
-```powershell
+```powershell title="PowerShell terminal"
 Get-ScheduledTask |
     Where-Object {
         $_.TaskPath -like "\Microsoft\Windows\EnterpriseMgmt\*"
@@ -892,14 +892,14 @@ Get-ScheduledTask |
 
 A complete enrollment task folder had been created on the device:
 
-```powershell
+```powershell title="PowerShell terminal"
 \Microsoft\Windows\EnterpriseMgmt\
 \Microsoft\Windows\EnterpriseMgmt\236348F8-2E95-4D98-BB22-D71AFD9B03B4\
 ```
 
 It contained tasks such as:
 
-```powershell
+```powershell title="PowerShell terminal"
 Policy Manager Login Refresh Schedule
 Provisioning initiated session
 Schedule #1 created by enrollment client
@@ -914,7 +914,7 @@ This confirmed that a formal MDM enrollment had been created.
 
 The enrollment ID was:
 
-```powershell
+```powershell title="PowerShell terminal"
 236348F8-2E95-4D98-BB22-D71AFD9B03B4
 ```
 
@@ -924,7 +924,7 @@ The enrollment ID was:
 
 The following command can be used to trigger enrollment manually:
 
-```powershell
+```powershell title="PowerShell terminal"
 C:\Windows\System32\deviceenroller.exe /c /AutoEnrollMDM
 ```
 
@@ -934,7 +934,7 @@ Wait for one minute:
 
 Then review the recent MDM events:
 
-```powershell
+```powershell title="PowerShell terminal"
 $Since = (Get-Date).AddMinutes(-10)
 
 Get-WinEvent -FilterHashtable @{
@@ -951,7 +951,7 @@ Format-List
 
 The log contained many new MDM PolicyManager events:
 
-```powershell
+```powershell title="PowerShell terminal"
 MDM PolicyManager: Set policy int
 EnrollmentID requesting merge: 236348F8-2E95-4D98-BB22-D71AFD9B03B4
 Enrollment Type: 0x6
@@ -960,14 +960,14 @@ Current User: Device
 
 Application installation events also appeared:
 
-```powershell
+```powershell title="PowerShell terminal"
 EnterpriseDesktopAppManagement CSP:
 Application content download started.
 ```
 
 and:
 
-```powershell
+```powershell title="PowerShell terminal"
 MDMAppInstaller task has started.
 ```
 
@@ -985,7 +985,7 @@ This confirmed that the device had not only completed enrollment, but was active
 
 The final `dsregcmd /status` output showed:
 
-```powershell
+```powershell title="PowerShell terminal"
 NgcSet             : NO
 IsDeviceJoined     : YES
 IsUserAzureAD      : YES
@@ -998,7 +998,7 @@ PreReqResult       : WillProvision
 
 The most important field was:
 
-```powershell
+```powershell title="PowerShell terminal"
 PreReqResult : WillProvision
 ```
 
@@ -1006,7 +1006,7 @@ This meant that Windows considered both the device and the user eligible for Win
 
 At this point, the user could sign out and sign back in:
 
-```powershell
+```powershell title="PowerShell terminal"
 shutdown /l
 ```
 
@@ -1034,14 +1034,14 @@ The user can then create the PIN.
 
 During troubleshooting, `gpupdate /force` returned:
 
-```powershell
+```powershell title="PowerShell terminal"
 Windows failed to apply the MDM Policy settings.
 MDM Policy settings might have its own log file.
 ```
 
 At the same time, the registry already contained:
 
-```powershell
+```powershell title="PowerShell terminal"
 AutoEnrollMDM = 1
 UseAADCredentialType = 1
 ```
@@ -1052,7 +1052,7 @@ The warning therefore did not mean that enrollment had failed.
 
 Later events also contained:
 
-```powershell
+```powershell title="PowerShell terminal"
 ADMXInstall
 0x86000009
 The system cannot find the file specified.
@@ -1097,7 +1097,7 @@ After troubleshooting, L108 had the following final state.
 
 ## Device State
 
-```powershell
+```powershell title="PowerShell terminal"
 AzureAdJoined    : YES
 DomainJoined     : YES
 DeviceAuthStatus : SUCCESS
@@ -1106,28 +1106,28 @@ TpmProtected     : YES
 
 ## User State
 
-```powershell
+```powershell title="PowerShell terminal"
 WorkplaceJoined : NO
 WamDefaultSet   : YES
 ```
 
 ## SSO State
 
-```powershell
+```powershell title="PowerShell terminal"
 AzureAdPrt : YES
 CloudTgt   : YES
 ```
 
 ## MDM
 
-```powershell
+```powershell title="PowerShell terminal"
 MdmUrl:
 https://enrollment.manage.microsoft.com/enrollmentserver/discovery.svc
 ```
 
 ## Windows Hello for Business
 
-```powershell
+```powershell title="PowerShell terminal"
 PolicyEnabled  : YES
 DeviceEligible : YES
 PreReqResult   : WillProvision
@@ -1135,7 +1135,7 @@ PreReqResult   : WillProvision
 
 ## EnterpriseMgmt
 
-```powershell
+```powershell title="PowerShell terminal"
 A complete enrollment GUID task folder was created.
 The device started receiving Intune policies and applications.
 ```
@@ -1204,13 +1204,13 @@ A device appearing in Entra only proves that a cloud object exists. It does not 
 
 When a device displays `Microsoft Entra hybrid joined` but still shows `Registered = Pending`, the first local check should be:
 
-```powershell
+```powershell title="PowerShell terminal"
 dsregcmd /status
 ```
 
 If the result is:
 
-```powershell
+```powershell title="PowerShell terminal"
 AzureAdJoined : NO
 ```
 
@@ -1218,7 +1218,7 @@ Hybrid Join must be repaired before troubleshooting Intune enrollment.
 
 After Hybrid Join succeeds, if the device shows:
 
-```powershell
+```powershell title="PowerShell terminal"
 WorkplaceJoined : YES
 AzureAdPrt      : NO
 ```
@@ -1227,7 +1227,7 @@ check for an old user-scoped Work or school account.
 
 Intune automatic enrollment and Windows Hello have a reliable foundation only when the following states are all healthy:
 
-```powershell
+```powershell title="PowerShell terminal"
 AzureAdJoined    : YES
 DomainJoined     : YES
 DeviceAuthStatus : SUCCESS
@@ -1243,13 +1243,13 @@ PolicyEnabled    : YES
 
 ## Check Hybrid Join Status
 
-```powershell
+```powershell title="PowerShell terminal"
 dsregcmd /status
 ```
 
 Important fields:
 
-```powershell
+```powershell title="PowerShell terminal"
 AzureAdJoined
 DomainJoined
 DeviceId
@@ -1264,7 +1264,7 @@ PreReqResult
 
 ## Debug Hybrid Join Manually
 
-```powershell
+```powershell title="PowerShell terminal"
 dsregcmd /debug /join
 ```
 
@@ -1272,7 +1272,7 @@ dsregcmd /debug /join
 
 ## Trigger Automatic Device Join
 
-```powershell
+```powershell title="PowerShell terminal"
 Start-ScheduledTask `
     -TaskPath "\Microsoft\Windows\Workplace Join\" `
     -TaskName "Automatic-Device-Join"
@@ -1280,7 +1280,7 @@ Start-ScheduledTask `
 
 or:
 
-```powershell
+```powershell title="PowerShell terminal"
 schtasks /Run /TN "\Microsoft\Windows\Workplace Join\Automatic-Device-Join"
 ```
 
@@ -1288,7 +1288,7 @@ schtasks /Run /TN "\Microsoft\Windows\Workplace Join\Automatic-Device-Join"
 
 ## Check Domain Controller Discovery
 
-```powershell
+```powershell title="PowerShell terminal"
 nltest /dsgetdc:corp.example.com
 ```
 
@@ -1296,13 +1296,13 @@ nltest /dsgetdc:corp.example.com
 
 ## Check the Computer Secure Channel
 
-```powershell
+```powershell title="PowerShell terminal"
 nltest /sc_verify:corp.example.com
 ```
 
 or:
 
-```powershell
+```powershell title="PowerShell terminal"
 Test-ComputerSecureChannel -Verbose
 ```
 
@@ -1310,7 +1310,7 @@ Test-ComputerSecureChannel -Verbose
 
 ## Check the Active Directory SCP
 
-```powershell
+```powershell title="PowerShell terminal"
 $ConfigNC = (Get-ADRootDSE).configurationNamingContext
 
 $SCPPath = "CN=62a0ff2e-97b9-4513-943f-0d221bd30080," +
@@ -1327,7 +1327,7 @@ $SCP.keywords
 
 ## Read the SCP from a Specific Domain Controller
 
-```powershell
+```powershell title="PowerShell terminal"
 $SCPDN = "CN=62a0ff2e-97b9-4513-943f-0d221bd30080," +
          "CN=Device Registration Configuration," +
          "CN=Services,CN=Configuration,DC=corp,DC=example,DC=com"
@@ -1342,7 +1342,7 @@ $SCP.keywords
 
 ## Check the Local Hybrid Join Tenant Override
 
-```powershell
+```powershell title="PowerShell terminal"
 reg query "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\CDJ\AAD"
 ```
 
@@ -1350,7 +1350,7 @@ reg query "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\CDJ\AAD"
 
 ## Check the MDM Automatic Enrollment GPO
 
-```powershell
+```powershell title="PowerShell terminal"
 reg query "HKLM\SOFTWARE\Policies\Microsoft\Windows\CurrentVersion\MDM"
 ```
 
@@ -1364,7 +1364,7 @@ AutoEnrollMDM = 1
 
 ## Generate a Group Policy Report
 
-```powershell
+```powershell title="PowerShell terminal"
 New-Item C:\Temp -ItemType Directory -Force | Out-Null
 
 gpresult /scope computer /h C:\Temp\GPReport.html
@@ -1376,7 +1376,7 @@ Start-Process C:\Temp\GPReport.html
 
 ## Check EnterpriseMgmt Tasks
 
-```powershell
+```powershell title="PowerShell terminal"
 Get-ScheduledTask |
     Where-Object {
         $_.TaskPath -like "\Microsoft\Windows\EnterpriseMgmt\*"
@@ -1388,7 +1388,7 @@ Get-ScheduledTask |
 
 ## Manually Trigger MDM Enrollment
 
-```powershell
+```powershell title="PowerShell terminal"
 C:\Windows\System32\deviceenroller.exe /c /AutoEnrollMDM
 ```
 
@@ -1396,7 +1396,7 @@ C:\Windows\System32\deviceenroller.exe /c /AutoEnrollMDM
 
 ## View Recent MDM Events
 
-```powershell
+```powershell title="PowerShell terminal"
 $Since = (Get-Date).AddMinutes(-10)
 
 Get-WinEvent -FilterHashtable @{
@@ -1411,7 +1411,7 @@ Format-List
 
 ## View Hybrid Join Events
 
-```powershell
+```powershell title="PowerShell terminal"
 Get-WinEvent `
     -LogName "Microsoft-Windows-User Device Registration/Admin" `
     -MaxEvents 50 |
@@ -1423,7 +1423,7 @@ Get-WinEvent `
 
 ## View Entra Identity Events
 
-```powershell
+```powershell title="PowerShell terminal"
 Get-WinEvent `
     -LogName "Microsoft-Windows-AAD/Operational" `
     -MaxEvents 100 |
@@ -1435,7 +1435,7 @@ Get-WinEvent `
 
 ## Sign Out the Current User
 
-```powershell
+```powershell title="PowerShell terminal"
 shutdown /l
 ```
 
@@ -1443,7 +1443,7 @@ shutdown /l
 
 ## Lock the Computer
 
-```powershell
+```powershell title="PowerShell terminal"
 rundll32.exe user32.dll,LockWorkStation
 ```
 
@@ -1463,7 +1463,7 @@ Hybrid Join had not been completed successfully.
 
 The local command:
 
-```powershell
+```powershell title="PowerShell terminal"
 dsregcmd /status
 ```
 

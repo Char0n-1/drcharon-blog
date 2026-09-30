@@ -12,7 +12,7 @@ lang: en
 ---
 
 Change the `server` value to your own. `port` 389 is default
-```powershell
+```powershell title="PowerShell terminal"
 Add-Type -AssemblyName System.DirectoryServices.Protocols
 
 $server = "dc01.contoso.com"

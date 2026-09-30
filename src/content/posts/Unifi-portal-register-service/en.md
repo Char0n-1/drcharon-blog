@@ -39,7 +39,7 @@ The next task was therefore to restore the UniFi Windows Service properly.
 
 Before making any changes, I confirmed that the UniFi Windows Service did not exist.
 
-```powershell
+```powershell title="PowerShell terminal"
 Get-Service -Name UniFi -ErrorAction SilentlyContinue
 ```
 
@@ -47,13 +47,13 @@ No result was returned.
 
 I then confirmed it with `sc.exe`:
 
-```powershell
+```powershell title="PowerShell terminal"
 sc.exe query UniFi
 ```
 
 The result was:
 
-```powershell
+```powershell title="PowerShell terminal"
 [SC] EnumQueryServicesStatus:OpenService FAILED 1060:
 
 The specified service does not exist as an installed service.
@@ -71,7 +71,7 @@ Before installing a new service, the manually started UniFi instance needed to b
 
 After stopping the foreground Java process, I checked for any remaining UniFi-related processes:
 
-```powershell
+```powershell title="PowerShell terminal"
 Get-Process -ErrorAction SilentlyContinue |
 Where-Object {
     $_.ProcessName -match "java|mongo|unifi"
@@ -81,7 +81,7 @@ Select-Object ProcessName,Id,Path
 
 The Java process had stopped, but one process was still running:
 
-```powershell
+```powershell title="PowerShell terminal"
 ProcessName   Id   Path
 -----------   --   ----
 mongod        5556 C:\Users\Administrator\Ubiquiti UniFi\bin\mongod.exe
@@ -89,7 +89,7 @@ mongod        5556 C:\Users\Administrator\Ubiquiti UniFi\bin\mongod.exe
 
 I checked its command line to confirm that it belonged to the UniFi installation:
 
-```powershell
+```powershell title="PowerShell terminal"
 Get-CimInstance Win32_Process -Filter "ProcessId=5556" |
 Select-Object ProcessId,ExecutablePath,CommandLine |
 Format-List
@@ -97,7 +97,7 @@ Format-List
 
 The process was using:
 
-```powershell
+```powershell title="PowerShell terminal"
 --dbpath "C:\Users\Administrator\Ubiquiti UniFi\data\db"
 --port 27117
 --bind_ip 127.0.0.1
@@ -107,14 +107,14 @@ This confirmed that it was the embedded MongoDB instance used by UniFi.
 
 It was also still listening on TCP `27117`:
 
-```powershell
+```powershell title="PowerShell terminal"
 Get-NetTCPConnection -OwningProcess 5556 -ErrorAction SilentlyContinue |
 Format-Table LocalAddress,LocalPort,RemoteAddress,RemotePort,State
 ```
 
 Result:
 
-```powershell
+```powershell title="PowerShell terminal"
 LocalAddress LocalPort RemoteAddress RemotePort State
 ------------ --------- ------------- ---------- -----
 127.0.0.1        27117 0.0.0.0                0 Listen
@@ -122,7 +122,7 @@ LocalAddress LocalPort RemoteAddress RemotePort State
 
 To avoid a port or database conflict when the Windows Service started, I stopped the remaining MongoDB process:
 
-```powershell
+```powershell title="PowerShell terminal"
 Stop-Process -Id 5556
 ```
 
@@ -146,7 +146,7 @@ C:\Users\Administrator\Ubiquiti UniFi\jre
 
 Instead of using `java -jar` I explicitly used the bundled Java executable to install the service:
 
-```powershell
+```powershell title="PowerShell terminal"
 cd "C:\Users\Administrator\Ubiquiti UniFi"
 
 & ".\jre\bin\java.exe" -jar ".\lib\ace.jar" installsvc
@@ -161,7 +161,7 @@ The installation completed successfully:
 
 After installation, I checked the newly created service:
 
-```powershell
+```powershell title="PowerShell terminal"
 Get-CimInstance Win32_Service -Filter "Name='UniFi'" |
 Select-Object Name,DisplayName,State,StartMode,PathName |
 Format-List
@@ -169,7 +169,7 @@ Format-List
 
 The result showed:
 
-```powershell
+```powershell title="PowerShell terminal"
 Name        : UniFi
 DisplayName : UniFi Network Server
 State       : Stopped
@@ -179,13 +179,13 @@ PathName    : "C:\Users\Administrator\Ubiquiti UniFi\bin\UniFi" //RS//UniFi
 
 I also checked the Service Control Manager configuration:
 
-```powershell
+```powershell title="PowerShell terminal"
 sc.exe qc UniFi
 ```
 
 Important values included:
 
-```powershell
+```powershell title="PowerShell terminal"
 SERVICE_NAME: UniFi
 TYPE               : 10  WIN32_OWN_PROCESS
 START_TYPE         : 2   AUTO_START
@@ -209,19 +209,19 @@ The UniFi executable is an Apache Procrun service wrapper.
 
 Its current service configuration can be printed using:
 
-```powershell
+```powershell title="PowerShell terminal"
 & "C:\Users\Administrator\Ubiquiti UniFi\bin\UniFi.exe" //PS//UniFi
 ```
 
 The output included:
 
-```powershell
+```powershell title="PowerShell terminal"
 --Jvm "C:\Users\Administrator\Ubiquiti UniFi\jre\bin\server\jvm.dll"
 ```
 
 It also showed:
 
-```powershell
+```powershell title="PowerShell terminal"
 --Classpath "C:\Users\Administrator\Ubiquiti UniFi\lib\ace.jar"
 
 --StartClass "com.ubnt.ace.Launcher"
@@ -237,7 +237,7 @@ The Windows Service was not relying on the server's default `java.exe`.
 
 Instead, Procrun was directly loading:
 
-```powershell
+```powershell title="PowerShell terminal"
 C:\Users\Administrator\Ubiquiti UniFi\jre\bin\server\jvm.dll
 ```
 
@@ -251,19 +251,19 @@ The Java 11 conflict was therefore no longer relevant to service startup.
 
 With the service registration and JVM configuration confirmed, I started the service:
 
-```powershell
+```powershell title="PowerShell terminal"
 Start-Service UniFi
 ```
 
 Then checked its status:
 
-```powershell
+```powershell title="PowerShell terminal"
 Get-Service UniFi
 ```
 
 The service entered the expected state:
 
-```powershell
+```powershell title="PowerShell terminal"
 Status   Name   DisplayName
 ------   ----   -----------
 Running  UniFi  UniFi Network Server
@@ -290,7 +290,7 @@ During the maintenance window, I rebooted the server.
 
 After Windows returned, I checked:
 
-```powershell
+```powershell title="PowerShell terminal"
 Get-Service UniFi
 ```
 
@@ -302,17 +302,17 @@ The service had automatically entered the `Running` state.
 
 ## Check whether the UniFi Service exists
 
-```powershell
+```powershell title="PowerShell terminal"
 Get-Service -Name UniFi -ErrorAction SilentlyContinue
 ```
 
-```powershell
+```powershell title="PowerShell terminal"
 sc.exe query UniFi
 ```
 
 ## Install the service using the bundled Java runtime
 
-```powershell
+```powershell title="PowerShell terminal"
 cd "C:\Users\Administrator\Ubiquiti UniFi"
 
 & ".\jre\bin\java.exe" -jar ".\lib\ace.jar" installsvc
@@ -320,37 +320,37 @@ cd "C:\Users\Administrator\Ubiquiti UniFi"
 
 ## Check the Windows Service configuration
 
-```powershell
+```powershell title="PowerShell terminal"
 Get-CimInstance Win32_Service -Filter "Name='UniFi'" |
 Select-Object Name,DisplayName,State,StartMode,PathName |
 Format-List
 ```
 
-```powershell
+```powershell title="PowerShell terminal"
 sc.exe qc UniFi
 ```
 
 ## Print the UniFi Procrun configuration
 
-```powershell
+```powershell title="PowerShell terminal"
 & "C:\Users\Administrator\Ubiquiti UniFi\bin\UniFi.exe" //PS//UniFi
 ```
 
 ## Start the service
 
-```powershell
+```powershell title="PowerShell terminal"
 Start-Service UniFi
 ```
 
 ## Check the service state
 
-```powershell
+```powershell title="PowerShell terminal"
 Get-Service UniFi
 ```
 
 ## Check UniFi-related processes
 
-```powershell
+```powershell title="PowerShell terminal"
 Get-Process -ErrorAction SilentlyContinue |
 Where-Object {
     $_.ProcessName -match "java|mongo|unifi"
@@ -360,7 +360,7 @@ Select-Object ProcessName,Id,Path
 
 ## Check UniFi ports
 
-```powershell
+```powershell title="PowerShell terminal"
 Get-NetTCPConnection -State Listen -ErrorAction SilentlyContinue |
 Where-Object {
     $_.LocalPort -in 8443,8080,8843,8880,6789,27117
@@ -371,7 +371,7 @@ Format-Table LocalAddress,LocalPort,OwningProcess
 
 ## Test the management interface
 
-```powershell
+```powershell title="PowerShell terminal"
 Test-NetConnection 127.0.0.1 -Port 8443
 ```
 

@@ -28,7 +28,7 @@ With a predictable naming convention, it's easy to populate the missing **mail**
 
 ## PowerShell Script
 
-```powershell
+```powershell title="PowerShell terminal"
 # Load Active Directory module if not already loaded
 Import-Module ActiveDirectory
 

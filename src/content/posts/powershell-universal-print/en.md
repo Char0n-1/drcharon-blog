@@ -52,7 +52,7 @@ The environment used in this article includes:
 
 # PowerShell Script
 
-```powershell
+```powershell title="PowerShell terminal"
 #Requires -Version 5.1
 
 <#
@@ -762,7 +762,7 @@ Printers that have already been processed are not shared again. The script conti
 
 The script sets the printer location properties with:
 
-```powershell
+```powershell title="PowerShell terminal"
 Set-UPPrinterProperty `
     -PrinterId $PrinterId `
     -Organization @($Organization) `
@@ -815,7 +815,7 @@ CAL-P01 Cloud connector
 
 The share is created with:
 
-```powershell
+```powershell title="PowerShell terminal"
 New-UPPrinterShare `
     -PrinterId $PrinterId `
     -ShareName $ShareName `
@@ -876,7 +876,7 @@ This prevents a situation where the Printer Share is created successfully but th
 
 After retrieving the Share ID, the script uses:
 
-```powershell
+```powershell title="PowerShell terminal"
 Grant-UPAccess `
     -ShareId $ShareId `
     -AllUsersAccess `

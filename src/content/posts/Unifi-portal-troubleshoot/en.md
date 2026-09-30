@@ -56,7 +56,7 @@ The goal was to restore the existing controller **without reinstalling UniFi or 
 
 The first step was to check the common UniFi ports.
 
-```powershell
+```powershell title="PowerShell terminal"
 $ports = 8443,8080,8843,8880,6789,27117
 
 foreach ($port in $ports) {
@@ -76,7 +76,7 @@ foreach ($port in $ports) {
 
 The result was:
 
-```powershell
+```powershell title="PowerShell terminal"
 Port 8443 : NOT LISTENING
 Port 8080 : NOT LISTENING
 Port 8843 : NOT LISTENING
@@ -87,7 +87,7 @@ Port 27117 : NOT LISTENING
 
 A direct TCP test confirmed the same thing:
 
-```powershell
+```powershell title="PowerShell terminal"
 Test-NetConnection 127.0.0.1 -Port 8443
 ```
 
@@ -150,7 +150,7 @@ Instead of checking installed applications manually, I used PowerShell to search
 
 The following script was used:
 
-```powershell
+```powershell title="PowerShell terminal"
 Write-Host "`n=== SERVER UPTIME ===" -ForegroundColor Cyan
 Get-CimInstance Win32_OperatingSystem |
 Select-Object LastBootUpTime
@@ -245,7 +245,7 @@ The search returned several useful findings.
 
 First, the server had rebooted recently:
 
-```powershell
+```powershell title="PowerShell terminal"
 LastBootUpTime
 --------------
 9/27/2026 11:25:47 PM
@@ -253,19 +253,19 @@ LastBootUpTime
 
 The uninstall registry still contained:
 
-```powershell
+```powershell title="PowerShell terminal"
 Ubiquiti UniFi (remove only)
 ```
 
 More importantly, the actual controller installation was discovered under:
 
-```powershell
+```powershell title="PowerShell terminal"
 C:\Users\Administrator\Ubiquiti UniFi
 ```
 
 The directory contained:
 
-```powershell
+```powershell title="PowerShell terminal"
 bin
 data
 dl
@@ -430,7 +430,7 @@ For that reason, I chose a temporary recovery method.
 
 Instead of modifying the system-wide Java configuration, I placed the UniFi bundled JRE at the beginning of the `PATH` for the current PowerShell session only:
 
-```powershell
+```powershell title="PowerShell terminal"
 $env:Path =
 "C:\Users\Administrator\Ubiquiti UniFi\jre\bin;" +
 $env:Path
@@ -438,7 +438,7 @@ $env:Path
 
 I then verified that the shell was now resolving `java` to the correct runtime:
 
-```powershell
+```powershell title="PowerShell terminal"
 java -version
 ```
 
@@ -446,7 +446,7 @@ The result showed Java 25.
 
 With the correct runtime temporarily active, I launched the existing UniFi startup script again:
 
-```powershell
+```powershell title="PowerShell terminal"
 cd "C:\Users\Administrator\Ubiquiti UniFi\bin"
 
 .\start.bat
@@ -572,7 +572,7 @@ UniFi Controller restored
 
 ## Check whether  a port is listening
 
-```powershell
+```powershell title="PowerShell terminal"
 Get-NetTCPConnection -State Listen -ErrorAction SilentlyContinue |
 Where-Object {
     $_.LocalPort -in 8443,8080,8843,8880,6789,27117
@@ -588,7 +588,7 @@ Test-NetConnection 127.0.0.1 -Port 8443
 
 ## Find related processes
 
-```powershell
+```powershell title="PowerShell terminal"
 Get-Process -ErrorAction SilentlyContinue |
 Where-Object {
     $_.ProcessName -match "java|mongo|unifi|ubiquiti"
@@ -598,19 +598,19 @@ Select-Object ProcessName,Id,Path
 
 ## Check the system Java version
 
-```powershell
+```powershell title="PowerShell terminal"
 java -version
 ```
 
 ## Check UniFi's bundled Java version
 
-```powershell
+```powershell title="PowerShell terminal"
 & "C:\Users\Administrator\Ubiquiti UniFi\jre\bin\java.exe" -version
 ```
 
 ## Temporarily prioritize the bundled JRE
 
-```powershell
+```powershell title="PowerShell terminal"
 $env:Path =
 "C:\Users\Administrator\Ubiquiti UniFi\jre\bin;" +
 $env:Path

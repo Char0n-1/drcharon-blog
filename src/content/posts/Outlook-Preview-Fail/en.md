@@ -68,14 +68,14 @@ The problem followed the affected user.
 
 The first Exchange Online check was the assigned OWA mailbox policy.
 
-```powershell
+```powershell title="PowerShell terminal"
 Get-CASMailbox sabriena.gauvreau@adfastcorp.com |
 Format-List DisplayName,PrimarySmtpAddress,OWAEnabled,OwaMailboxPolicy
 ```
 
 The affected user was assigned:
 
-```powershell
+```powershell title="PowerShell terminal"
 OwaMailboxPolicy-Default
 ```
 
@@ -83,7 +83,7 @@ A known-good user had the same policy.
 
 The relevant WAC and attachment access settings were then checked:
 
-```powershell
+```powershell title="PowerShell terminal"
 Get-OwaMailboxPolicy |
 Format-Table Name,
 WacViewingOnPrivateComputersEnabled,
@@ -94,7 +94,7 @@ DirectFileAccessOnPublicComputersEnabled
 
 The important values were enabled:
 
-```powershell
+```powershell title="PowerShell terminal"
 WacViewingOnPrivateComputersEnabled  : True
 WacViewingOnPublicComputersEnabled   : True
 DirectFileAccessOnPrivateComputersEnabled : True
@@ -107,14 +107,14 @@ So the issue was not caused by a different OWA policy assignment.
 
 I also compared the affected user with a working user using:
 
-```powershell
+```powershell title="PowerShell terminal"
 Get-CASMailbox baduser@contasco.com | Format-List *
 Get-CASMailbox gooduser@contasco.com | Format-List *
 ```
 
 The important client access settings were normal:
 
-```powershell
+```powershell title="PowerShell terminal"
 OWAEnabled              : True
 UniversalOutlookEnabled : True
 EwsEnabled              : True
@@ -173,7 +173,7 @@ Microsoft Support eventually provided a PowerShell script to reset several mailb
 
 The relevant commands were:
 
-```powershell
+```powershell title="PowerShell terminal"
 Connect-ExchangeOnline
 
 $mailbox = Get-Mailbox affecteduser@contasco.com
@@ -226,7 +226,7 @@ These included:
 
 ### Suite.Storage
 
-```powershell
+```powershell title="PowerShell terminal"
 Configuration\IPM.Configuration.Suite.Storage
 ```
 
@@ -234,13 +234,13 @@ Stores part of the Microsoft 365 / Outlook user state.
 
 ### Aggregated OWA user configuration
 
-```powershell
+```powershell title="PowerShell terminal"
 Configuration\IPM.Configuration.Agregated.OWAUserConfiguration
 ```
 
 This was especially interesting because the browser logs had previously shown:
 
-```powershell
+```powershell title="PowerShell terminal"
 ValidateAggregatedConfiguration
 500 Internal Server Error
 ```
@@ -249,7 +249,7 @@ The final repair directly reset the corresponding aggregated OWA configuration o
 
 ### OWA session information
 
-```powershell
+```powershell title="PowerShell terminal"
 Configuration\IPM.Configuration.OWA.SessionInformation
 ```
 
@@ -259,7 +259,7 @@ Signing out and signing back in allowed Outlook to recreate this information.
 
 ### OWA user options
 
-```powershell
+```powershell title="PowerShell terminal"
 Configuration\IPM.Configuration.OWA.UserOptions
 ```
 
@@ -267,7 +267,7 @@ Stores user-specific Outlook preferences and options.
 
 ### OWA view state
 
-```powershell
+```powershell title="PowerShell terminal"
 Configuration\IPM.Configuration.OWA.ViewStateConfiguration
 ```
 

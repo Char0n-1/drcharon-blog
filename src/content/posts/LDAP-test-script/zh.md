@@ -12,7 +12,7 @@ lang: zh
 ---
 
 使用前修改`server` 和 `port` 的值
-```powershell
+```powershell title="PowerShell terminal"
 Add-Type -AssemblyName System.DirectoryServices.Protocols
 
 $server = "dc01.contoso.com"

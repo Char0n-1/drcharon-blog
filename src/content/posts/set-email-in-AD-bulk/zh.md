@@ -28,7 +28,7 @@ lang: zh
 
 ## PowerShell 脚本
 
-```powershell
+```powershell title="PowerShell terminal"
 # 加载 Active Directory 模块
 Import-Module ActiveDirectory
 

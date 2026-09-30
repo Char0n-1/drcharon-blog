@@ -67,14 +67,14 @@ lang: zh
 
 首先检查 Exchange Online 中实际分配给用户的 OWA mailbox policy。
 
-```powershell
+```powershell title="PowerShell terminal"
 Get-CASMailbox sabriena.gauvreau@adfastcorp.com |
 Format-List DisplayName,PrimarySmtpAddress,OWAEnabled,OwaMailboxPolicy
 ```
 
 受影响用户使用的是：
 
-```powershell
+```powershell title="PowerShell terminal"
 OwaMailboxPolicy-Default
 ```
 
@@ -82,7 +82,7 @@ OwaMailboxPolicy-Default
 
 接着检查 WAC 和附件访问相关设置：
 
-```powershell
+```powershell title="PowerShell terminal"
 Get-OwaMailboxPolicy |
 Format-Table Name,
 WacViewingOnPrivateComputersEnabled,
@@ -93,7 +93,7 @@ DirectFileAccessOnPublicComputersEnabled
 
 关键设置均为启用状态：
 
-```powershell
+```powershell title="PowerShell terminal"
 WacViewingOnPrivateComputersEnabled  : True
 WacViewingOnPublicComputersEnabled   : True
 DirectFileAccessOnPrivateComputersEnabled : True
@@ -107,14 +107,14 @@ DirectFileAccessOnPrivateComputersEnabled : True
 
 我还对比了受影响用户和正常用户的 Exchange client access 配置：
 
-```powershell
+```powershell title="PowerShell terminal"
 Get-CASMailbox baduser@contasco.com | Format-List *
 Get-CASMailbox gooduser@contasco.com | Format-List *
 ```
 
 关键的 client access 设置都正常：
 
-```powershell
+```powershell title="PowerShell terminal"
 OWAEnabled              : True
 UniversalOutlookEnabled : True
 EwsEnabled              : True
@@ -174,7 +174,7 @@ Microsoft Support 最终提供了一段 PowerShell 脚本，用于重置几个 m
 
 相关命令如下：
 
-```powershell
+```powershell title="PowerShell terminal"
 Connect-ExchangeOnline
 
 $mailbox = Get-Mailbox affecteduser@contasco.com

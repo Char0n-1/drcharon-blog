@@ -59,7 +59,7 @@ https://<controller-ip>:8443/
 
 第一步是检查 UniFi 常用端口。
 
-```powershell
+```powershell title="PowerShell terminal"
 $ports = 8443,8080,8843,8880,6789,27117
 
 foreach ($port in $ports) {
@@ -79,7 +79,7 @@ foreach ($port in $ports) {
 
 结果如下：
 
-```powershell
+```powershell title="PowerShell terminal"
 Port 8443 : NOT LISTENING
 Port 8080 : NOT LISTENING
 Port 8843 : NOT LISTENING
@@ -90,13 +90,13 @@ Port 27117 : NOT LISTENING
 
 随后直接测试本机 TCP `8443`：
 
-```powershell
+```powershell title="PowerShell terminal"
 Test-NetConnection 127.0.0.1 -Port 8443
 ```
 
 结果：
 
-```powershell
+```powershell title="PowerShell terminal"
 PingSucceeded    : True
 TcpTestSucceeded : False
 ```
@@ -113,7 +113,7 @@ TcpTestSucceeded : False
 
 下一步，我检查是否有任何 UniFi 相关的后台进程正在运行。
 
-```powershell
+```powershell title="PowerShell terminal"
 Get-Process -ErrorAction SilentlyContinue |
 Where-Object {
     $_.ProcessName -match "java|mongo|unifi|ubiquiti"
@@ -125,7 +125,7 @@ Select-Object ProcessName,Id,Path
 
 随后，我又检查了与 UniFi 相关的 Windows Service：
 
-```powershell
+```powershell title="PowerShell terminal"
 Get-CimInstance Win32_Service |
 Where-Object {
     $_.Name -match "UniFi|Ubiquiti|Mongo" -or
@@ -157,7 +157,7 @@ Select-Object Name,DisplayName,State,StartMode,PathName
 
 使用的脚本如下：
 
-```powershell
+```powershell title="PowerShell terminal"
 Write-Host "`n=== SERVER UPTIME ===" -ForegroundColor Cyan
 Get-CimInstance Win32_OperatingSystem |
 Select-Object LastBootUpTime
@@ -252,7 +252,7 @@ Format-List
 
 首先，服务器近期确实发生过重启：
 
-```powershell
+```powershell title="PowerShell terminal"
 LastBootUpTime
 --------------
 9/27/2026 11:25:47 PM
@@ -260,19 +260,19 @@ LastBootUpTime
 
 Uninstall Registry 中仍然存在：
 
-```powershell
+```powershell title="PowerShell terminal"
 Ubiquiti UniFi (remove only)
 ```
 
 更重要的是，我们找到了实际的 Controller 安装目录：
 
-```powershell
+```powershell title="PowerShell terminal"
 C:\Users\Administrator\Ubiquiti UniFi
 ```
 
 目录中包含：
 
-```powershell
+```powershell title="PowerShell terminal"
 bin
 data
 dl
@@ -301,13 +301,13 @@ Controller 的程序文件仍然存在，其中包括应用运行环境以及数
 
 Controller 安装目录中包含自己的启动脚本：
 
-```powershell
+```powershell title="PowerShell terminal"
 C:\Users\Administrator\Ubiquiti UniFi\bin\start.bat
 ```
 
 其内容基本如下：
 
-```powershell
+```powershell title="PowerShell terminal"
 cd ..
 
 java ^
@@ -324,7 +324,7 @@ java ^
 
 UniFi Controller 可以直接通过：
 
-```powershell
+```powershell title="PowerShell terminal"
 lib\ace.jar
 ```
 
@@ -332,14 +332,14 @@ lib\ace.jar
 
 因此我尝试运行：
 
-```powershell
+```powershell title="PowerShell terminal"
 cd "C:\Users\Administrator\Ubiquiti UniFi\bin"
 .\start.bat
 ```
 
 但 Java 并没有正常启动 Controller，而是返回：
 
-```powershell
+```powershell title="PowerShell terminal"
 Error: LinkageError occurred while loading main class com.ubnt.ace.Launcher
 
 java.lang.UnsupportedClassVersionError:
@@ -380,13 +380,13 @@ start.bat is launching Java 11
 
 首先检查系统默认 Java：
 
-```powershell
+```powershell title="PowerShell terminal"
 java -version
 ```
 
 结果：
 
-```powershell
+```powershell title="PowerShell terminal"
 openjdk version "11.0.20"
 OpenJDK Runtime Environment Temurin-11.0.20+8
 OpenJDK 64-Bit Server VM Temurin-11.0.20+8
@@ -400,13 +400,13 @@ C:\Users\Administrator\Ubiquiti UniFi\jre
 
 检查这个 Java 的版本：
 
-```powershell
+```powershell title="PowerShell terminal"
 & "C:\Users\Administrator\Ubiquiti UniFi\jre\bin\java.exe" -version
 ```
 
 结果：
 
-```powershell
+```powershell title="PowerShell terminal"
 openjdk version "25" 2025-09-16 LTS
 OpenJDK Runtime Environment Temurin-25+36
 OpenJDK 64-Bit Server VM Temurin-25+36
@@ -456,7 +456,7 @@ Windows Service Registration、自动启动机制以及 Java Path 等问题，�
 
 没有直接修改系统级 Java 配置，而是仅在当前 PowerShell Session 中，把 UniFi 自带的 JRE 临时放到 `PATH` 最前面：
 
-```powershell
+```powershell title="PowerShell terminal"
 $env:Path =
 "C:\Users\Administrator\Ubiquiti UniFi\jre\bin;" +
 $env:Path
@@ -464,7 +464,7 @@ $env:Path
 
 随后再次确认当前 Shell 中调用的 `java` 已经是正确版本：
 
-```powershell
+```powershell title="PowerShell terminal"
 java -version
 ```
 
@@ -472,7 +472,7 @@ java -version
 
 在当前 Session 已经使用正确 Java Runtime 的情况下，再次运行原有的 UniFi Startup Script：
 
-```powershell
+```powershell title="PowerShell terminal"
 cd "C:\Users\Administrator\Ubiquiti UniFi\bin"
 
 .\start.bat
@@ -601,7 +601,7 @@ UniFi Controller restored
 
 ## 检查端口是否正在监听
 
-```powershell
+```powershell title="PowerShell terminal"
 Get-NetTCPConnection -State Listen -ErrorAction SilentlyContinue |
 Where-Object {
     $_.LocalPort -in 8443,8080,8843,8880,6789,27117
@@ -611,13 +611,13 @@ Sort-Object LocalPort
 
 ## 测试端口
 
-```powershell
+```powershell title="PowerShell terminal"
 Test-NetConnection 127.0.0.1 -Port 8443
 ```
 
 ## 查找相关进程
 
-```powershell
+```powershell title="PowerShell terminal"
 Get-Process -ErrorAction SilentlyContinue |
 Where-Object {
     $_.ProcessName -match "java|mongo|unifi|ubiquiti"
@@ -627,19 +627,19 @@ Select-Object ProcessName,Id,Path
 
 ## 检查系统 Java 版本
 
-```powershell
+```powershell title="PowerShell terminal"
 java -version
 ```
 
 ## 检查 UniFi 自带的 Java 版本
 
-```powershell
+```powershell title="PowerShell terminal"
 & "C:\Users\Administrator\Ubiquiti UniFi\jre\bin\java.exe" -version
 ```
 
 ## 临时提高 UniFi 自带 JRE 的优先级
 
-```powershell
+```powershell title="PowerShell terminal"
 $env:Path =
 "C:\Users\Administrator\Ubiquiti UniFi\jre\bin;" +
 $env:Path

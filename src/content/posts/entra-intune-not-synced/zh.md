@@ -138,7 +138,7 @@ DomainJoined  : YES
 
 > 适用于：本地 AD 设备已同步到 Entra，但 Hybrid Join 显示 `Pending`、Intune 中没有设备、Windows Hello 无法配置。
 
-```powershell
+```powershell title="PowerShell terminal"
 # 1. 查看当前 Hybrid Join、PRT、Workplace Join 和 MDM 状态
 dsregcmd /status
 
@@ -265,13 +265,13 @@ dsregcmd /status
 
 在设备上运行：
 
-```powershell
+```powershell title="PowerShell terminal"
 dsregcmd /status
 ```
 
 最开始设备的状态为：
 
-```powershell
+```powershell title="PowerShell terminal"
 AzureAdJoined : NO
 DomainJoined  : YES
 ```
@@ -289,19 +289,19 @@ Entra 中的 `Pending` 状态与本机结果一致。
 
 Microsoft Entra Hybrid Join 通常由以下计划任务触发：
 
-```powershell
+```powershell title="PowerShell terminal"
 \Microsoft\Windows\Workplace Join\Automatic-Device-Join
 ```
 
 先刷新计算机策略：
 
-```powershell
+```powershell title="PowerShell terminal"
 gpupdate /force
 ```
 
 检查任务是否存在：
 
-```powershell
+```powershell title="PowerShell terminal"
 Get-ScheduledTask `
     -TaskPath "\Microsoft\Windows\Workplace Join\" `
     -TaskName "Automatic-Device-Join"
@@ -309,7 +309,7 @@ Get-ScheduledTask `
 
 手动启动任务：
 
-```powershell
+```powershell title="PowerShell terminal"
 Start-ScheduledTask `
     -TaskPath "\Microsoft\Windows\Workplace Join\" `
     -TaskName "Automatic-Device-Join"
@@ -317,19 +317,19 @@ Start-ScheduledTask `
 
 也可以使用：
 
-```powershell
+```powershell title="PowerShell terminal"
 schtasks /Run /TN "\Microsoft\Windows\Workplace Join\Automatic-Device-Join"
 ```
 
 等待一段时间后再次检查：
 
-```powershell
+```powershell title="PowerShell terminal"
 dsregcmd /status
 ```
 
 设备仍未完成注册，因此继续运行：
 
-```powershell
+```powershell title="PowerShell terminal"
 dsregcmd /debug /join
 ```
 
@@ -339,7 +339,7 @@ dsregcmd /debug /join
 
 第一次执行时出现：
 
-```powershell
+```powershell title="PowerShell terminal"
 DsrCmdAccountMgr::IsDomainControllerAvailable:
 DsGetDcName No domain controller is available for the specified domain
 or the domain does not exist: 0x8007054b.
@@ -355,13 +355,13 @@ The device can NOT be joined because a domain controller could not be located.
 
 检查域控制器发现：
 
-```powershell
+```powershell title="PowerShell terminal"
 nltest /dsgetdc:corp.example.com
 ```
 
 正常返回：
 
-```powershell
+```powershell title="PowerShell terminal"
 DC: \\DC2.corp.example.com
 Address: \\192.168.1.8
 Flags: GC DS LDAP KDC TIMESERV WRITABLE DNS_DC
@@ -369,13 +369,13 @@ Flags: GC DS LDAP KDC TIMESERV WRITABLE DNS_DC
 
 同时检查计算机与域之间的安全通道：
 
-```powershell
+```powershell title="PowerShell terminal"
 nltest /sc_verify:corp.example.com
 ```
 
 返回：
 
-```powershell
+```powershell title="PowerShell terminal"
 Trusted DC Connection Status Status = 0 0x0 NERR_Success
 Trust Verification Status = 0 0x0 NERR_Success
 ```
@@ -392,13 +392,13 @@ Trust Verification Status = 0 0x0 NERR_Success
 
 再次运行：
 
-```powershell
+```powershell title="PowerShell terminal"
 dsregcmd /debug /join
 ```
 
 出现：
 
-```powershell
+```powershell title="PowerShell terminal"
 DsrCmdAccountMgr::IsDomainControllerAvailable:
 DsGetDcName success
 
@@ -415,7 +415,7 @@ TenantInfo::Discover failed with error code 0x801c001d.
 
 核心错误为：
 
-```powershell
+```powershell title="PowerShell terminal"
 0x801c001d
 ```
 
@@ -423,7 +423,7 @@ TenantInfo::Discover failed with error code 0x801c001d.
 
 Hybrid Join 客户端通常会从 Active Directory 的 Service Connection Point，也就是 SCP，读取：
 
-```powershell
+```powershell title="PowerShell terminal"
 azureADName
 azureADId
 ```
@@ -434,7 +434,7 @@ azureADId
 
 在域控制器或安装了 Active Directory PowerShell 模块的管理电脑上运行：
 
-```powershell
+```powershell title="PowerShell terminal"
 $ConfigNC = (Get-ADRootDSE).configurationNamingContext
 
 $SCPPath = "CN=62a0ff2e-97b9-4513-943f-0d221bd30080," +
@@ -449,7 +449,7 @@ $SCP.keywords
 
 返回：
 
-```powershell
+```powershell title="PowerShell terminal"
 CN=62a0ff2e-97b9-4513-943f-0d221bd30080,
 CN=Device Registration Configuration,
 CN=Services,
@@ -472,7 +472,7 @@ azureADId:00000000-0000-0000-0000-000000000000
 
 为了确认并不是域控制器或 AD 复制问题，需要直接从 L108 上读取同一个对象。
 
-```powershell
+```powershell title="PowerShell terminal"
 $ConfigNC = ([ADSI]"LDAP://RootDSE").configurationNamingContext
 
 $SCPPath = "LDAP://CN=62a0ff2e-97b9-4513-943f-0d221bd30080," +
@@ -487,14 +487,14 @@ $SCP.keywords
 
 L108 也能正常读取：
 
-```powershell
+```powershell title="PowerShell terminal"
 azureADName:tenant.onmicrosoft.com
 azureADId:00000000-0000-0000-0000-000000000000
 ```
 
 继续指定设备当前使用的 DC, 强制读取SCP：
 
-```powershell
+```powershell title="PowerShell terminal"
 $SCPDN = "CN=62a0ff2e-97b9-4513-943f-0d221bd30080," +
          "CN=Device Registration Configuration," +
          "CN=Services,CN=Configuration,DC=corp,DC=example,DC=com"
@@ -522,13 +522,13 @@ Windows 还可能通过本地注册表覆盖 Active Directory SCP。
 
 检查：
 
-```powershell
+```powershell title="PowerShell terminal"
 reg query "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\CDJ\AAD"
 ```
 
 返回：
 
-```powershell
+```powershell title="PowerShell terminal"
 ERROR: The system was unable to find the specified registry key or value.
 ```
 
@@ -553,19 +553,19 @@ TenantName
 
 再次手动启动计划任务：
 
-```powershell
+```powershell title="PowerShell terminal"
 schtasks /Run /TN "\Microsoft\Windows\Workplace Join\Automatic-Device-Join"
 ```
 
 马上运行：
 
-```powershell
+```powershell title="PowerShell terminal"
 dsregcmd /debug /join
 ```
 
 出现：
 
-```powershell
+```powershell title="PowerShell terminal"
 Another instance of the Join Task is already running.
 Please retry after sometime.
 ```
@@ -576,13 +576,13 @@ Please retry after sometime.
 
 几分钟后再次运行：
 
-```powershell
+```powershell title="PowerShell terminal"
 dsregcmd /debug /join
 ```
 
 返回：
 
-```powershell
+```powershell title="PowerShell terminal"
 DsrCmdAccountMgr::IsDomainControllerAvailable:
 DsGetDcName success
 
@@ -603,7 +603,7 @@ The device is already joined.
 
 这里最重要的是：
 
-```powershell
+```powershell title="PowerShell terminal"
 deviceKeysHealthy: YES
 isJoined: YES
 ```
@@ -616,13 +616,13 @@ isJoined: YES
 
 运行：
 
-```powershell
+```powershell title="PowerShell terminal"
 dsregcmd /status
 ```
 
 设备状态变为：
 
-```powershell
+```powershell title="PowerShell terminal"
 AzureAdJoined : YES
 DomainJoined  : YES
 DeviceAuthStatus : SUCCESS
@@ -630,7 +630,7 @@ DeviceAuthStatus : SUCCESS
 
 示例：
 
-```powershell
+```powershell title="PowerShell terminal"
 Device State
 ------------
 
@@ -642,7 +642,7 @@ Device Name   : L108.corp.example.com
 
 设备详细信息：
 
-```powershell
+```powershell title="PowerShell terminal"
 DeviceAuthStatus : SUCCESS
 TpmProtected     : YES
 KeyProvider      : Microsoft Platform Crypto Provider
@@ -657,7 +657,7 @@ KeyProvider      : Microsoft Platform Crypto Provider
 
 此时 Entra 中原本显示：
 
-```powershell
+```powershell title="PowerShell terminal"
 Registered: Pending
 ```
 
@@ -669,7 +669,7 @@ Registered: Pending
 
 虽然 Hybrid Join 已经成功，但用户上下文中仍显示：
 
-```powershell
+```powershell title="PowerShell terminal"
 WorkplaceJoined : YES
 WorkAccountCount: 1
 AzureAdPrt      : NO
@@ -677,13 +677,13 @@ AzureAdPrt      : NO
 
 同时还有一个独立的 Workplace Device ID：
 
-```powershell
+```powershell title="PowerShell terminal"
 WorkplaceDeviceId : 08486976-c661-4d5a-8648-730a4200c3ee
 ```
 
 这意味着当前用户配置文件里还保留着旧的：
 
-```powershell
+```powershell title="PowerShell terminal"
 Microsoft Entra registered
 ```
 
@@ -691,7 +691,7 @@ Microsoft Entra registered
 
 它通常是用户以前在以下位置添加工作账号产生的：
 
-```powershell
+```powershell title="PowerShell terminal"
 Settings
 → Accounts
 → Access work or school
@@ -718,7 +718,7 @@ Settings
 
 在用户自己的 Windows 会话中进入：
 
-```powershell
+```powershell title="PowerShell terminal"
 Settings
 → Accounts
 → Access work or school
@@ -728,14 +728,14 @@ Settings
 
 需要删除的是：
 
-```powershell
+```powershell title="PowerShell terminal"
 user@example.com
 Work or school account
 ```
 
 不能删除的是：
 
-```powershell
+```powershell title="PowerShell terminal"
 corp.example.com
 Connected to CORP AD domain
 ```
@@ -746,7 +746,7 @@ Connected to CORP AD domain
 
 删除旧工作账号后，注销当前用户：
 
-```powershell
+```powershell title="PowerShell terminal"
 shutdown /l
 ```
 
@@ -758,13 +758,13 @@ shutdown /l
 
 重新登录后运行：
 
-```powershell
+```powershell title="PowerShell terminal"
 dsregcmd /status
 ```
 
 状态变为：
 
-```powershell
+```powershell title="PowerShell terminal"
 WorkplaceJoined : NO
 WamDefaultSet   : YES
 AzureAdPrt      : YES
@@ -772,7 +772,7 @@ AzureAdPrt      : YES
 
 Tenant Details 中也出现了完整的 MDM URL：
 
-```powershell
+```powershell title="PowerShell terminal"
 TenantName       : example.com
 MdmUrl           : https://enrollment.manage.microsoft.com/enrollmentserver/discovery.svc
 MdmTouUrl        : https://portal.manage.microsoft.com/TermsofUse.aspx
@@ -781,7 +781,7 @@ MdmComplianceUrl : https://portal.manage.microsoft.com/?portalAction=Compliance
 
 SSO 状态变为：
 
-```powershell
+```powershell title="PowerShell terminal"
 AzureAdPrt : YES
 CloudTgt   : YES
 ```
@@ -815,7 +815,7 @@ Primary Refresh Token
 
 对于 Hybrid Joined 设备，正常状态通常应为：
 
-```powershell
+```powershell title="PowerShell terminal"
 AzureAdJoined : YES
 DomainJoined  : YES
 AzureAdPrt    : YES
@@ -831,19 +831,19 @@ AzureAdPrt    : YES
 
 在管理员 PowerShell 中运行：
 
-```powershell
+```powershell title="PowerShell terminal"
 gpupdate /force
 ```
 
 检查注册表：
 
-```powershell
+```powershell title="PowerShell terminal"
 reg query "HKLM\SOFTWARE\Policies\Microsoft\Windows\CurrentVersion\MDM"
 ```
 
 返回：
 
-```powershell
+```powershell title="PowerShell terminal"
 AutoEnrollMDM         REG_DWORD    0x1
 UseAADCredentialType  REG_DWORD    0x1
 MDMApplicationId      REG_SZ
@@ -853,7 +853,7 @@ MDMApplicationId      REG_SZ
 
 对应 GPO 路径为：
 
-```powershell
+```powershell title="PowerShell terminal"
 Computer Configuration
 → Policies
 → Administrative Templates
@@ -864,7 +864,7 @@ Computer Configuration
 
 在普通 Hybrid Joined 用户设备上，通常使用：
 
-```powershell
+```powershell title="PowerShell terminal"
 Enabled
 Credential Type: User Credential
 ```
@@ -875,7 +875,7 @@ Credential Type: User Credential
 
 运行：
 
-```powershell
+```powershell title="PowerShell terminal"
 Get-ScheduledTask |
     Where-Object {
         $_.TaskPath -like "\Microsoft\Windows\EnterpriseMgmt\*"
@@ -885,14 +885,14 @@ Get-ScheduledTask |
 
 设备上已经出现了完整的 Enrollment 任务目录：
 
-```powershell
+```powershell title="PowerShell terminal"
 \Microsoft\Windows\EnterpriseMgmt\
 \Microsoft\Windows\EnterpriseMgmt\236348F8-2E95-4D98-BB22-D71AFD9B03B4\
 ```
 
 其中包括：
 
-```powershell
+```powershell title="PowerShell terminal"
 Policy Manager Login Refresh Schedule
 Provisioning initiated session
 Schedule #1 created by enrollment client
@@ -907,7 +907,7 @@ Passport for Work alert created by enrollment client
 
 Enrollment ID 为：
 
-```powershell
+```powershell title="PowerShell terminal"
 236348F8-2E95-4D98-BB22-D71AFD9B03B4
 ```
 
@@ -917,7 +917,7 @@ Enrollment ID 为：
 
 可以使用以下命令手动触发：
 
-```powershell
+```powershell title="PowerShell terminal"
 C:\Windows\System32\deviceenroller.exe /c /AutoEnrollMDM
 ```
 
@@ -927,7 +927,7 @@ C:\Windows\System32\deviceenroller.exe /c /AutoEnrollMDM
 
 然后查看最近的 MDM 日志：
 
-```powershell
+```powershell title="PowerShell terminal"
 $Since = (Get-Date).AddMinutes(-10)
 
 Get-WinEvent -FilterHashtable @{
@@ -944,7 +944,7 @@ Format-List
 
 日志中出现大量新的 MDM PolicyManager 事件：
 
-```powershell
+```powershell title="PowerShell terminal"
 MDM PolicyManager: Set policy int
 EnrollmentID requesting merge:
 236348F8-2E95-4D98-BB22-D71AFD9B03B4
@@ -954,14 +954,14 @@ Current User: Device
 
 还出现应用安装事件：
 
-```powershell
+```powershell title="PowerShell terminal"
 EnterpriseDesktopAppManagement CSP:
 Application content download started.
 ```
 
 以及：
 
-```powershell
+```powershell title="PowerShell terminal"
 MDMAppInstaller task has started.
 ```
 
@@ -979,7 +979,7 @@ MDMAppInstaller task has started.
 
 最终 `dsregcmd /status` 中显示：
 
-```powershell
+```powershell title="PowerShell terminal"
 NgcSet          : NO
 IsDeviceJoined  : YES
 IsUserAzureAD   : YES
@@ -992,7 +992,7 @@ PreReqResult    : WillProvision
 
 最关键的是：
 
-```powershell
+```powershell title="PowerShell terminal"
 PreReqResult : WillProvision
 ```
 
@@ -1000,19 +1000,19 @@ PreReqResult : WillProvision
 
 此时可以注销并重新登录：
 
-```powershell
+```powershell title="PowerShell terminal"
 shutdown /l
 ```
 
 Windows 应自动提示：
 
-```powershell
+```powershell title="PowerShell terminal"
 Your organization requires you to set up Windows Hello
 ```
 
 也可以进入：
 
-```powershell
+```powershell title="PowerShell terminal"
 Settings
 → Accounts
 → Sign-in options
@@ -1028,14 +1028,14 @@ Settings
 
 排障过程中，`gpupdate /force` 曾返回：
 
-```powershell
+```powershell title="PowerShell terminal"
 Windows failed to apply the MDM Policy settings.
 MDM Policy settings might have its own log file.
 ```
 
 但与此同时：
 
-```powershell
+```powershell title="PowerShell terminal"
 AutoEnrollMDM = 1
 UseAADCredentialType = 1
 ```
@@ -1046,7 +1046,7 @@ UseAADCredentialType = 1
 
 后续日志中还出现：
 
-```powershell
+```powershell title="PowerShell terminal"
 ADMXInstall
 0x86000009
 The system cannot find the file specified.
@@ -1091,7 +1091,7 @@ Not compliant
 
 ## Device State
 
-```powershell
+```powershell title="PowerShell terminal"
 AzureAdJoined    : YES
 DomainJoined     : YES
 DeviceAuthStatus : SUCCESS
@@ -1100,28 +1100,28 @@ TpmProtected     : YES
 
 ## User State
 
-```powershell
+```powershell title="PowerShell terminal"
 WorkplaceJoined : NO
 WamDefaultSet   : YES
 ```
 
 ## SSO State
 
-```powershell
+```powershell title="PowerShell terminal"
 AzureAdPrt : YES
 CloudTgt   : YES
 ```
 
 ## MDM
 
-```powershell
+```powershell title="PowerShell terminal"
 MdmUrl:
 https://enrollment.manage.microsoft.com/enrollmentserver/discovery.svc
 ```
 
 ## Windows Hello for Business
 
-```powershell
+```powershell title="PowerShell terminal"
 PolicyEnabled : YES
 DeviceEligible: YES
 PreReqResult  : WillProvision
@@ -1198,13 +1198,13 @@ Windows Hello for Business Provisioning
 
 设备显示 `Microsoft Entra hybrid joined`，但 `Registered = Pending` 时，应优先检查本机：
 
-```powershell
+```powershell title="PowerShell terminal"
 dsregcmd /status
 ```
 
 如果：
 
-```powershell
+```powershell title="PowerShell terminal"
 AzureAdJoined : NO
 ```
 
@@ -1212,7 +1212,7 @@ AzureAdJoined : NO
 
 Hybrid Join 成功后，如果：
 
-```powershell
+```powershell title="PowerShell terminal"
 WorkplaceJoined : YES
 AzureAdPrt      : NO
 ```
@@ -1221,7 +1221,7 @@ AzureAdPrt      : NO
 
 只有当以下状态同时正常后，Intune 自动注册和 Windows Hello 才有可靠基础：
 
-```powershell
+```powershell title="PowerShell terminal"
 AzureAdJoined    : YES
 DomainJoined     : YES
 DeviceAuthStatus : SUCCESS
@@ -1237,13 +1237,13 @@ PolicyEnabled    : YES
 
 ## 检查 Hybrid Join 状态
 
-```powershell
+```powershell title="PowerShell terminal"
 dsregcmd /status
 ```
 
 重点字段：
 
-```powershell
+```powershell title="PowerShell terminal"
 AzureAdJoined
 DomainJoined
 DeviceId
@@ -1258,7 +1258,7 @@ PreReqResult
 
 ## 手动调试 Hybrid Join
 
-```powershell
+```powershell title="PowerShell terminal"
 dsregcmd /debug /join
 ```
 
@@ -1266,7 +1266,7 @@ dsregcmd /debug /join
 
 ## 触发 Automatic Device Join
 
-```powershell
+```powershell title="PowerShell terminal"
 Start-ScheduledTask `
     -TaskPath "\Microsoft\Windows\Workplace Join\" `
     -TaskName "Automatic-Device-Join"
@@ -1274,7 +1274,7 @@ Start-ScheduledTask `
 
 或者：
 
-```powershell
+```powershell title="PowerShell terminal"
 schtasks /Run /TN "\Microsoft\Windows\Workplace Join\Automatic-Device-Join"
 ```
 
@@ -1282,7 +1282,7 @@ schtasks /Run /TN "\Microsoft\Windows\Workplace Join\Automatic-Device-Join"
 
 ## 检查域控制器
 
-```powershell
+```powershell title="PowerShell terminal"
 nltest /dsgetdc:corp.example.com
 ```
 
@@ -1290,13 +1290,13 @@ nltest /dsgetdc:corp.example.com
 
 ## 检查计算机安全通道
 
-```powershell
+```powershell title="PowerShell terminal"
 nltest /sc_verify:corp.example.com
 ```
 
 或者：
 
-```powershell
+```powershell title="PowerShell terminal"
 Test-ComputerSecureChannel -Verbose
 ```
 
@@ -1304,7 +1304,7 @@ Test-ComputerSecureChannel -Verbose
 
 ## 检查 Active Directory SCP
 
-```powershell
+```powershell title="PowerShell terminal"
 $ConfigNC = (Get-ADRootDSE).configurationNamingContext
 
 $SCPPath = "CN=62a0ff2e-97b9-4513-943f-0d221bd30080," +
@@ -1321,7 +1321,7 @@ $SCP.keywords
 
 ## 从指定域控制器读取 SCP
 
-```powershell
+```powershell title="PowerShell terminal"
 $SCPDN = "CN=62a0ff2e-97b9-4513-943f-0d221bd30080," +
          "CN=Device Registration Configuration," +
          "CN=Services,CN=Configuration,DC=corp,DC=example,DC=com"
@@ -1336,7 +1336,7 @@ $SCP.keywords
 
 ## 检查本机 Hybrid Join 覆盖配置
 
-```powershell
+```powershell title="PowerShell terminal"
 reg query "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\CDJ\AAD"
 ```
 
@@ -1344,13 +1344,13 @@ reg query "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\CDJ\AAD"
 
 ## 检查 MDM 自动注册 GPO
 
-```powershell
+```powershell title="PowerShell terminal"
 reg query "HKLM\SOFTWARE\Policies\Microsoft\Windows\CurrentVersion\MDM"
 ```
 
 正常应看到：
 
-```powershell
+```powershell title="PowerShell terminal"
 AutoEnrollMDM = 1
 ```
 
@@ -1358,7 +1358,7 @@ AutoEnrollMDM = 1
 
 ## 生成 GPO 报告
 
-```powershell
+```powershell title="PowerShell terminal"
 New-Item C:\Temp -ItemType Directory -Force | Out-Null
 
 gpresult /scope computer /h C:\Temp\GPReport.html
@@ -1370,7 +1370,7 @@ Start-Process C:\Temp\GPReport.html
 
 ## 检查 EnterpriseMgmt 任务
 
-```powershell
+```powershell title="PowerShell terminal"
 Get-ScheduledTask |
     Where-Object {
         $_.TaskPath -like "\Microsoft\Windows\EnterpriseMgmt\*"
@@ -1382,7 +1382,7 @@ Get-ScheduledTask |
 
 ## 手动触发 MDM Enrollment
 
-```powershell
+```powershell title="PowerShell terminal"
 C:\Windows\System32\deviceenroller.exe /c /AutoEnrollMDM
 ```
 
@@ -1390,7 +1390,7 @@ C:\Windows\System32\deviceenroller.exe /c /AutoEnrollMDM
 
 ## 查看最近的 MDM 日志
 
-```powershell
+```powershell title="PowerShell terminal"
 $Since = (Get-Date).AddMinutes(-10)
 
 Get-WinEvent -FilterHashtable @{
@@ -1405,7 +1405,7 @@ Format-List
 
 ## 查看 Hybrid Join 日志
 
-```powershell
+```powershell title="PowerShell terminal"
 Get-WinEvent `
     -LogName "Microsoft-Windows-User Device Registration/Admin" `
     -MaxEvents 50 |
@@ -1417,7 +1417,7 @@ Get-WinEvent `
 
 ## 查看 AAD 身份日志
 
-```powershell
+```powershell title="PowerShell terminal"
 Get-WinEvent `
     -LogName "Microsoft-Windows-AAD/Operational" `
     -MaxEvents 100 |
@@ -1429,7 +1429,7 @@ Get-WinEvent `
 
 ## 触发注销
 
-```powershell
+```powershell title="PowerShell terminal"
 shutdown /l
 ```
 
@@ -1437,7 +1437,7 @@ shutdown /l
 
 ## 锁定电脑
 
-```powershell
+```powershell title="PowerShell terminal"
 rundll32.exe user32.dll,LockWorkStation
 ```
 
@@ -1457,7 +1457,7 @@ Registered: Pending
 
 排障时应该始终回到本机，以：
 
-```powershell
+```powershell title="PowerShell terminal"
 dsregcmd /status
 ```
 

@@ -39,7 +39,7 @@ UniFi bundled Java = Java 25
 
 开始之前，先确认系统里目前没有 UniFi Service：
 
-```powershell
+```powershell title="PowerShell terminal"
 Get-Service -Name UniFi -ErrorAction SilentlyContinue
 ```
 
@@ -47,13 +47,13 @@ Get-Service -Name UniFi -ErrorAction SilentlyContinue
 
 再用 `sc.exe` 确认一次：
 
-```powershell
+```powershell title="PowerShell terminal"
 sc.exe query UniFi
 ```
 
 返回：
 
-```powershell
+```powershell title="PowerShell terminal"
 [SC] EnumQueryServicesStatus:OpenService FAILED 1060:
 
 The specified service does not exist as an installed service.
@@ -69,7 +69,7 @@ The specified service does not exist as an installed service.
 
 关掉前台运行的 Java 进程后，我检查了一下还有没有相关进程残留：
 
-```powershell
+```powershell title="PowerShell terminal"
 Get-Process -ErrorAction SilentlyContinue |
 Where-Object {
     $_.ProcessName -match "java|mongo|unifi"
@@ -79,7 +79,7 @@ Select-Object ProcessName,Id,Path
 
 Java 已经停了，但 MongoDB 还在运行：
 
-```powershell
+```powershell title="PowerShell terminal"
 ProcessName   Id   Path
 -----------   --   ----
 mongod        5556 C:\Users\Administrator\Ubiquiti UniFi\bin\mongod.exe
@@ -87,7 +87,7 @@ mongod        5556 C:\Users\Administrator\Ubiquiti UniFi\bin\mongod.exe
 
 为了确认这确实是 UniFi 自己的 MongoDB，我又看了一下它的启动参数：
 
-```powershell
+```powershell title="PowerShell terminal"
 Get-CimInstance Win32_Process -Filter "ProcessId=5556" |
 Select-Object ProcessId,ExecutablePath,CommandLine |
 Format-List
@@ -95,7 +95,7 @@ Format-List
 
 可以看到：
 
-```powershell
+```powershell title="PowerShell terminal"
 --dbpath "C:\Users\Administrator\Ubiquiti UniFi\data\db"
 --port 27117
 --bind_ip 127.0.0.1
@@ -105,14 +105,14 @@ Format-List
 
 同时检查端口：
 
-```powershell
+```powershell title="PowerShell terminal"
 Get-NetTCPConnection -OwningProcess 5556 -ErrorAction SilentlyContinue |
 Format-Table LocalAddress,LocalPort,RemoteAddress,RemotePort,State
 ```
 
 结果：
 
-```powershell
+```powershell title="PowerShell terminal"
 LocalAddress LocalPort RemoteAddress RemotePort State
 ------------ --------- ------------- ---------- -----
 127.0.0.1        27117 0.0.0.0                0 Listen
@@ -122,7 +122,7 @@ MongoDB 还占着 `27117`。
 
 为了避免稍后新的 UniFi Service 启动时发生端口冲突，或者两个实例同时操作同一个数据库，先把这个残留进程停掉：
 
-```powershell
+```powershell title="PowerShell terminal"
 Stop-Process -Id 5556
 ```
 
@@ -146,13 +146,13 @@ C:\Users\Administrator\Ubiquiti UniFi\jre
 
 所以这里不使用普通的：
 
-```powershell
+```powershell title="PowerShell terminal"
 java -jar
 ```
 
 而是直接指定 UniFi 自带的 Java：
 
-```powershell
+```powershell title="PowerShell terminal"
 cd "C:\Users\Administrator\Ubiquiti UniFi"
 
 & ".\jre\bin\java.exe" -jar ".\lib\ace.jar" installsvc
@@ -166,7 +166,7 @@ Service 安装完成。
 
 安装完成后，先确认 Service 的基本信息：
 
-```powershell
+```powershell title="PowerShell terminal"
 Get-CimInstance Win32_Service -Filter "Name='UniFi'" |
 Select-Object Name,DisplayName,State,StartMode,PathName |
 Format-List
@@ -174,7 +174,7 @@ Format-List
 
 结果：
 
-```powershell
+```powershell title="PowerShell terminal"
 Name        : UniFi
 DisplayName : UniFi Network Server
 State       : Stopped
@@ -184,13 +184,13 @@ PathName    : "C:\Users\Administrator\Ubiquiti UniFi\bin\UniFi" //RS//UniFi
 
 再看一下 Service Control Manager 里的配置：
 
-```powershell
+```powershell title="PowerShell terminal"
 sc.exe qc UniFi
 ```
 
 其中比较重要的几项：
 
-```powershell
+```powershell title="PowerShell terminal"
 SERVICE_NAME: UniFi
 TYPE               : 10  WIN32_OWN_PROCESS
 START_TYPE         : 2   AUTO_START
@@ -214,19 +214,19 @@ SERVICE_START_NAME : LocalSystem
 
 UniFi 这里使用的是 Apache Procrun 作为 Windows Service Wrapper，可以直接把当前 Service 的配置打印出来：
 
-```powershell
+```powershell title="PowerShell terminal"
 & "C:\Users\Administrator\Ubiquiti UniFi\bin\UniFi.exe" //PS//UniFi
 ```
 
 输出中最关键的是这一项：
 
-```powershell
+```powershell title="PowerShell terminal"
 --Jvm "C:\Users\Administrator\Ubiquiti UniFi\jre\bin\server\jvm.dll"
 ```
 
 同时还可以看到：
 
-```powershell
+```powershell title="PowerShell terminal"
 --Classpath "C:\Users\Administrator\Ubiquiti UniFi\lib\ace.jar"
 
 --StartClass "com.ubnt.ace.Launcher"
@@ -242,7 +242,7 @@ UniFi Service 启动时并不会去调用系统 PATH 里的 `java.exe`。
 
 Procrun 会直接加载：
 
-```powershell
+```powershell title="PowerShell terminal"
 C:\Users\Administrator\Ubiquiti UniFi\jre\bin\server\jvm.dll
 ```
 
@@ -256,19 +256,19 @@ C:\Users\Administrator\Ubiquiti UniFi\jre\bin\server\jvm.dll
 
 确认 Service 和 JVM 配置都没问题后，启动 UniFi：
 
-```powershell
+```powershell title="PowerShell terminal"
 Start-Service UniFi
 ```
 
 检查状态：
 
-```powershell
+```powershell title="PowerShell terminal"
 Get-Service UniFi
 ```
 
 结果正常：
 
-```powershell
+```powershell title="PowerShell terminal"
 Status   Name   DisplayName
 ------   ----   -----------
 Running  UniFi  UniFi Network Server
@@ -294,13 +294,13 @@ https://<controller-ip>:8443/
 
 服务器回来后检查：
 
-```powershell
+```powershell title="PowerShell terminal"
 Get-Service UniFi
 ```
 
 UniFi Service 已经自动进入：
 
-```powershell
+```powershell title="PowerShell terminal"
 Running
 ```
 
@@ -314,17 +314,17 @@ Running
 
 ## 检查 UniFi Service 是否存在
 
-```powershell
+```powershell title="PowerShell terminal"
 Get-Service -Name UniFi -ErrorAction SilentlyContinue
 ```
 
-```powershell
+```powershell title="PowerShell terminal"
 sc.exe query UniFi
 ```
 
 ## 使用 UniFi 自带的 Java 安装 Service
 
-```powershell
+```powershell title="PowerShell terminal"
 cd "C:\Users\Administrator\Ubiquiti UniFi"
 
 & ".\jre\bin\java.exe" -jar ".\lib\ace.jar" installsvc
@@ -332,37 +332,37 @@ cd "C:\Users\Administrator\Ubiquiti UniFi"
 
 ## 查看 Windows Service 配置
 
-```powershell
+```powershell title="PowerShell terminal"
 Get-CimInstance Win32_Service -Filter "Name='UniFi'" |
 Select-Object Name,DisplayName,State,StartMode,PathName |
 Format-List
 ```
 
-```powershell
+```powershell title="PowerShell terminal"
 sc.exe qc UniFi
 ```
 
 ## 查看 UniFi Procrun 配置
 
-```powershell
+```powershell title="PowerShell terminal"
 & "C:\Users\Administrator\Ubiquiti UniFi\bin\UniFi.exe" //PS//UniFi
 ```
 
 ## 启动 UniFi Service
 
-```powershell
+```powershell title="PowerShell terminal"
 Start-Service UniFi
 ```
 
 ## 检查 Service 状态
 
-```powershell
+```powershell title="PowerShell terminal"
 Get-Service UniFi
 ```
 
 ## 检查 UniFi 相关进程
 
-```powershell
+```powershell title="PowerShell terminal"
 Get-Process -ErrorAction SilentlyContinue |
 Where-Object {
     $_.ProcessName -match "java|mongo|unifi"
@@ -372,7 +372,7 @@ Select-Object ProcessName,Id,Path
 
 ## 检查 UniFi 常用端口
 
-```powershell
+```powershell title="PowerShell terminal"
 Get-NetTCPConnection -State Listen -ErrorAction SilentlyContinue |
 Where-Object {
     $_.LocalPort -in 8443,8080,8843,8880,6789,27117
@@ -383,7 +383,7 @@ Format-Table LocalAddress,LocalPort,OwningProcess
 
 ## 测试管理端口
 
-```powershell
+```powershell title="PowerShell terminal"
 Test-NetConnection 127.0.0.1 -Port 8443
 ```
 

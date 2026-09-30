@@ -44,7 +44,7 @@ lang: zh
 
 
 
-```powershell
+```powershell title="PowerShell terminal"
 #Requires -Version 5.1
 
 <#
@@ -504,7 +504,7 @@ Publish-UniversalPrinters.ps1
 
 如有需要，可以只为当前 PowerShell 会话临时允许脚本执行：
 
-```powershell
+```powershell title="PowerShell terminal"
 Set-ExecutionPolicy -Scope Process Bypass
 ```
 
@@ -522,7 +522,7 @@ $DryRun = $false
 
 然后运行：
 
-```powershell
+```powershell title="PowerShell terminal"
 .\Publish-UniversalPrinters.ps1
 ```
 
@@ -612,7 +612,7 @@ CAL-P01
 
 脚本中定义了美国站点列表：
 
-```powershell
+```powershell title="PowerShell terminal"
 $USASites = @(
     'ELK',
     'STL',
@@ -668,7 +668,7 @@ UniversalPrintManagement 模块中的部分命令，在不同版本中可能返�
 
 脚本中的 `Get-UPResultItems` 函数会判断返回对象是否包含 `Results` 属性：
 
-```powershell
+```powershell title="PowerShell terminal"
 function Get-UPResultItems {
     param(
         [Parameter(Mandatory)]
@@ -722,13 +722,13 @@ Skipping non-Connector printer
 
 脚本在开始处理前，会同时读取：
 
-```powershell
+```powershell title="PowerShell terminal"
 Get-UPPrinter -IncludeConnectorDetails
 ```
 
 以及：
 
-```powershell
+```powershell title="PowerShell terminal"
 Get-UPPrinterShare
 ```
 
@@ -755,7 +755,7 @@ Skipping already shared printer
 
 脚本通过下面的命令设置打印机位置：
 
-```powershell
+```powershell title="PowerShell terminal"
 Set-UPPrinterProperty `
     -PrinterId $PrinterId `
     -Organization @($Organization) `
@@ -808,7 +808,7 @@ CAL-P01 Cloud connector
 
 创建 Share 使用：
 
-```powershell
+```powershell title="PowerShell terminal"
 New-UPPrinterShare `
     -PrinterId $PrinterId `
     -ShareName $ShareName `
@@ -869,7 +869,7 @@ The share was created, but its ShareId could not be retrieved.
 
 获得 Share ID 后，脚本使用：
 
-```powershell
+```powershell title="PowerShell terminal"
 Grant-UPAccess `
     -ShareId $ShareId `
     -AllUsersAccess `
