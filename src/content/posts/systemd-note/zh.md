@@ -15,26 +15,25 @@ lang: zh
 
 列出已配置为开机启用的 service unit
 
-```bash
+```bash title="bash"
 systemctl list-unit-files --type=service --state=enabled
 ```
 
 查看当前正在运行的服务：
 
-```bash
+```bash title="bash"
 systemctl list-units --type=service --state=running
 ```
 
 分别判断开机启动和当前运行状态：
 
-```bash
+```bash title="bash"
 systemctl is-enabled nginx.service
 systemctl is-active nginx.service
 ```
 
 开启，关闭，重启，设为开机自启，查看状态
-
-```bash
+```bash title="bash"
 systemctl start nginx
 systemctl stop nginx
 systemctl restart nginx
@@ -44,7 +43,7 @@ systemctl status nginx
 
 创建一个自定义的Springboot service
 
-```bash
+```bash frame="code" title="hello.service"
 cat <<'EOF' >/etc/systemd/system/hello.service
 [Unit]
 Description=Spring Boot HelloWorld
@@ -67,7 +66,7 @@ EOF
 
 service文件的位置(详情参考 man systemd.unit)
 
-```bash
+```bash title="bash"
  Table 1.  Load path when running in system mode (--system).
        ┌────────────────────┬─────────────────────────────┐
        │Path                │ Description                 │
@@ -88,38 +87,36 @@ service文件的位置(详情参考 man systemd.unit)
 
 
 ## 修改 unit 后重新加载
-
-```
+```bash title="bash"
 systemctl daemon-reload
 ```
 
 只要创建或修改了 unit 文件，就应该运行它。它不会自动重启服务，通常还需要：
 
-```
+```bash title="bash"
 systemctl restart hello.service
 ```
 
 ## 检查 unit 文件语法
-
-```
+```bash title="bash"
 systemd-analyze verify /etc/systemd/system/hello.service
 ```
 
 ## 查看失败的 unit
 
-```
+```bash title="bash"
 systemctl --failed
 ```
 
 仅查看失败的服务：
 
-```
+```bash title="bash"
 systemctl --failed --type=service
 ```
 
 ## 查看服务日志
 
-```
+```bash title="bash"
 journalctl -u hello.service
 journalctl -u hello.service -b
 journalctl -u hello.service -f
@@ -130,13 +127,13 @@ journalctl -u hello.service --since "30 minutes ago"
 
 修复问题后，如果服务仍显示 failed：
 
-```
+```bash title="bash"
 systemctl reset-failed hello.service
 ```
 
 然后重新启动：
 
-```
+```bash title="bash"
 systemctl start hello.service
 ```
 
@@ -144,7 +141,7 @@ systemctl start hello.service
 
 不要直接修改：
 
-```
+```bash title="bash"
 /lib/systemd/system/nginx.service
 ```
 
@@ -152,13 +149,12 @@ systemctl start hello.service
 
 使用：
 
-```
+```bash title="bash"
 systemctl edit nginx.service
 ```
 
 例如：
-
-```
+```bash title="bash"
 [Service]
 Restart=on-failure
 RestartSec=5s
@@ -166,26 +162,26 @@ RestartSec=5s
 
 查看合并后的结果：
 
-```
+```bash title="bash"
 systemctl cat nginx.service
 ```
 
 恢复并删除本地覆盖：
 
-```
+```bash title="bash"
 systemctl revert nginx.service
 ```
 
 
 ## 查看/lib/systemd/system路径下的服务是由什么软件包创建的
 
-```bash
+```bash title="bash"
 dpkg-query -S /lib/systemd/system/* | sort -u 
 ```
 
 Output:
 
-```bash
+```bash title="bash"
 dpkg-query: no path found matching pattern /lib/systemd/system/ecs_mq.service
 dpkg-query: no path found matching pattern /lib/systemd/system/SplunkForwarder.service
 dpkg-query: no path found matching pattern /lib/systemd/system/system-systemd\x2dcryptsetup.slice
@@ -207,5 +203,5 @@ base-files: /lib/systemd/system/motd-news.timer
 </aside>
 
 
-> [!NOTE] 注释
+
 > `dpkg-query` 找不到这些文件，表示 dpkg 数据库中没有软件包声明拥有该路径。它们可能是手工创建、由第三方安装脚本创建、由软件包安装脚本动态生成，或由 systemd generator 生成。仅仅使用 `dpkg -i` 手动安装 `.deb`，通常不会导致 `dpkg-query -S` 无法找到包内文件。
